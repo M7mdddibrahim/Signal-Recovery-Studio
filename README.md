@@ -1,1 +1,1 @@
-# Signal-Recovery-Studio
+# Signal Recovery Studio
