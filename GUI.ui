@@ -238,7 +238,7 @@
      <x>0</x>
      <y>0</y>
      <width>1250</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuLoad">
@@ -259,25 +259,18 @@
     <property name="title">
      <string>Frequency</string>
     </property>
-    <addaction name="actionChannel_1"/>
-    <addaction name="actionChannel_2"/>
-    <addaction name="actionChannel_3"/>
+    <addaction name="actionEnter_Frequency"/>
    </widget>
    <widget class="QMenu" name="menuMagnitude">
     <property name="title">
      <string>Magnitude</string>
     </property>
-    <addaction name="actionChannel_4"/>
-    <addaction name="actionChannel_5"/>
-    <addaction name="actionChannel_6"/>
+    <addaction name="actionEnter_Magnitude"/>
    </widget>
    <widget class="QMenu" name="menuRemove">
     <property name="title">
      <string>Remove</string>
     </property>
-    <addaction name="actionChannel_7"/>
-    <addaction name="actionChannel_8"/>
-    <addaction name="actionChannel_9"/>
    </widget>
    <addaction name="menuLoad"/>
    <addaction name="menuAdd_Signal"/>
@@ -371,6 +364,16 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionEnter_Frequency">
+   <property name="text">
+    <string>Enter Frequency</string>
+   </property>
+  </action>
+  <action name="actionEnter_Magnitude">
+   <property name="text">
+    <string>Enter Magnitude</string>
    </property>
   </action>
  </widget>

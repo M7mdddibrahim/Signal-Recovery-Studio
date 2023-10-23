@@ -27,7 +27,30 @@ import PIL
 import tempfile
 from fpdf import FPDF
 import random
+from PlotLine import *
+import numpy as np
+ext=(".txt",".csv")
 
+PlotLines=[]
+class InputDialog(QtWidgets.QDialog):
+    def __init__(self, parent=None):
+        super(InputDialog, self).__init__(parent)
+        self.setWindowTitle("Input Dialog")
+
+        layout = QtWidgets.QVBoxLayout(self)
+
+        self.input_label = QtWidgets.QLabel("Enter Number:")
+        self.input_text = QtWidgets.QLineEdit(self)
+        layout.addWidget(self.input_label)
+        layout.addWidget(self.input_text)
+
+        self.ok_button = QtWidgets.QPushButton("OK", self)
+        layout.addWidget(self.ok_button)
+        self.ok_button.clicked.connect(self.accept)
+
+        self.cancel_button = QtWidgets.QPushButton("Cancel", self)
+        layout.addWidget(self.cancel_button)
+        self.cancel_button.clicked.connect(self.reject)
 class MyWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -38,3 +61,87 @@ class MyWindow(QtWidgets.QMainWindow):
         self.ui.verticalLayout_8.addWidget(self.graphWidget1)
         self.ui.verticalLayout_6.addWidget(self.graphWidget2)
         self.ui.verticalLayout_7.addWidget(self.graphWidget3)
+        self.actionSIN.triggered.connect(self.AddSin)
+        self.actionCOSINE.triggered.connect(self.AddCos)
+        self.actionEnter_Frequency.triggered.connect(self.EnterFrequency)
+        self.actionEnter_Magnitude.triggered.connect(self.EnterMagnitude)
+        self.actionLoad.triggered.connect(self.Load)
+
+
+    def AddSin(self):
+        newplot=PlotLine()
+        newplot.Frequency=10
+        newplot.magnitude=10
+        num_points = 1000
+        t = np.linspace(0, 1, num_points)
+        newplot.signal = (np.sin(2*np.pi*newplot.Frequency*t))*newplot.magnitude
+        PlotLines.append(newplot)
+        self.graphWidget1.plot(t,newplot.signal)
+    def AddCos(self):
+        newplot=PlotLine()
+        newplot.Frequency=10
+        newplot.magnitude=10
+        num_points = 1000
+        t = np.linspace(0, 1, num_points)
+        newplot.signal = (np.cos(2*np.pi*newplot.Frequency*t))*newplot.magnitude
+        PlotLines.append(newplot)
+        self.graphWidget1.plot(t,newplot.signal)
+    def EnterFrequency(self):
+        
+          dialog = InputDialog(self)
+          result = dialog.exec_()  # This will block until the user closes the dialog
+
+          if result == QtWidgets.QDialog.Accepted:
+             user_input = dialog.input_text.text()
+             PlotLines[-1].Frequency=int(user_input)
+             self.updatefunction()
+    def EnterMagnitude(self):
+        
+          dialog = InputDialog(self)
+          result = dialog.exec_()  # This will block until the user closes the dialog
+
+          if result == QtWidgets.QDialog.Accepted:
+             user_input = dialog.input_text.text()
+             PlotLines[-1].magnitude=int(user_input)
+             self.graphWidget1.clear()
+             self.updatefunction()
+          
+            
+
+    def updatefunction(self):
+         self.graphWidget1.clear()
+         t = np.linspace(0, 1, 1000)
+         PlotLines[-1].signal=(np.sin(2*np.pi* PlotLines[-1].Frequency*t))* PlotLines[-1].magnitude
+         self.graphWidget1.plot(t,PlotLines[-1].signal)
+
+    def Load(self):
+            filename = QtWidgets.QFileDialog.getOpenFileName()
+            path = filename[0]
+            if path.endswith(ext):
+                if path.endswith(".txt"):
+                    with open(path, "r") as data:
+                        x = []
+                        y = []
+                        for line in data:
+                            p = line.split()
+                            x.append(float(p[0]))
+                            y.append(float(p[1]))
+                    newplot = PlotLine()
+                    newplot.data = pd.DataFrame({"time": x, "amplitude": y})
+                    self.graphWidget1.plot(newplot.data['time'],newplot.data['amplitude'])
+                    PlotLines.append(newplot)
+
+                else:
+                    newplot = PlotLine()
+                    newplot.data = pd.read_csv(path, usecols=["time", "amplitude"])
+                    self.graphWidget1.plot(newplot.data['time'],newplot.data['amplitude'])
+                    PlotLines.append(newplot)
+            
+            else:
+                    self.ErrorMsg("You can only load .txt or .csv files.")
+
+
+
+
+
+ 
