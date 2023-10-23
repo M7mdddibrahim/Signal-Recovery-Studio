@@ -259,25 +259,16 @@
     <property name="title">
      <string>Frequency</string>
     </property>
-    <addaction name="actionChannel_1"/>
-    <addaction name="actionChannel_2"/>
-    <addaction name="actionChannel_3"/>
    </widget>
    <widget class="QMenu" name="menuMagnitude">
     <property name="title">
      <string>Magnitude</string>
     </property>
-    <addaction name="actionChannel_4"/>
-    <addaction name="actionChannel_5"/>
-    <addaction name="actionChannel_6"/>
    </widget>
    <widget class="QMenu" name="menuRemove">
     <property name="title">
      <string>Remove</string>
     </property>
-    <addaction name="actionChannel_7"/>
-    <addaction name="actionChannel_8"/>
-    <addaction name="actionChannel_9"/>
    </widget>
    <addaction name="menuLoad"/>
    <addaction name="menuAdd_Signal"/>
@@ -310,51 +301,6 @@
   <action name="actionMagnitude">
    <property name="text">
     <string>Magnitude</string>
-   </property>
-  </action>
-  <action name="actionChannel_1">
-   <property name="text">
-    <string>Channel 1</string>
-   </property>
-  </action>
-  <action name="actionChannel_2">
-   <property name="text">
-    <string>Channel 2</string>
-   </property>
-  </action>
-  <action name="actionChannel_3">
-   <property name="text">
-    <string>Channel 3</string>
-   </property>
-  </action>
-  <action name="actionChannel_4">
-   <property name="text">
-    <string>Channel 1</string>
-   </property>
-  </action>
-  <action name="actionChannel_5">
-   <property name="text">
-    <string>Channel 2</string>
-   </property>
-  </action>
-  <action name="actionChannel_6">
-   <property name="text">
-    <string>Channel 3</string>
-   </property>
-  </action>
-  <action name="actionChannel_7">
-   <property name="text">
-    <string>Channel 1</string>
-   </property>
-  </action>
-  <action name="actionChannel_8">
-   <property name="text">
-    <string>Channel 2</string>
-   </property>
-  </action>
-  <action name="actionChannel_9">
-   <property name="text">
-    <string>Channel 3</string>
    </property>
   </action>
   <action name="actionLoad">
