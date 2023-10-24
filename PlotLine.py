@@ -7,3 +7,6 @@ class PlotLine:
     Frequency=0
     SamplingInterval=0
     sampledSignal=None
+    signaltime=None
+    signaltype=0
+    islouded=0
