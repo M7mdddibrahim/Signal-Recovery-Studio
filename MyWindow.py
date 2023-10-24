@@ -77,6 +77,11 @@ class MyWindow(QtWidgets.QMainWindow):
         newplot.signal = (np.sin(2*np.pi*newplot.Frequency*t))*newplot.magnitude
         PlotLines.append(newplot)
         self.graphWidget1.plot(t,newplot.signal)
+        newplot.Samplingfrequency=2*newplot.Frequency
+        newplot.SamplingInterval=1/newplot.Samplingfrequency
+        t2=np.arange(0,1,newplot.SamplingInterval)
+        newplot.sampledSignal=(np.sin(2*np.pi*newplot.Frequency*t2))*newplot.magnitude
+        self.graphWidget1.plot(t2,newplot.sampledSignal,symbol='+')
     def AddCos(self):
         newplot=PlotLine()
         newplot.Frequency=10

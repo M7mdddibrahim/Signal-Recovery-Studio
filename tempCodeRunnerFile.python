@@ -1,0 +1,25 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Define sine wave parameters
+frequency = 10  # Frequency of the sine wave in Hz
+amplitude = 1.0
+sampling_frequency = 1000  # Sampling frequency in Hz
+duration = 1.0  # Total duration of the signal in seconds
+
+# Calculate the number of samples
+num_samples = int(duration * sampling_frequency)
+
+# Create a time vector representing the discrete time points
+t = np.linspace(0, duration, num_samples, endpoint=False)
+
+# Generate the discrete sampled sine wave
+sampled_signal = amplitude * np.sin(2 * np.pi * frequency * t)
+
+# Plot the discrete sampled signal as stem plot
+plt.stem(t, sampled_signal, linefmt='-r', markerfmt='ro', basefmt=' ')
+plt.xlabel('Discrete Time (s)')
+plt.ylabel('Amplitude')
+plt.title('Discrete Sampled Sine Wave')
+plt.grid(True)
+plt.show()

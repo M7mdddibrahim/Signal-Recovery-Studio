@@ -5,4 +5,5 @@ class PlotLine:
     data=None
     signal=None
     Frequency=0
-    
+    SamplingInterval=0
+    sampledSignal=None
