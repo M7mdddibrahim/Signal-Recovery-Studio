@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, uic, QtCore
+from PyQt5 import QtWidgets, uic, QtCore 
 from pyqtgraph import PlotWidget, plot
 from PyQt5.QtWidgets import (
     QApplication,
@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (
     QErrorMessage,
     QMessageBox,
     QDialog,
-    QScrollBar
+    QSlider
 )
 from collections import deque
 import pyqtgraph as pg
@@ -32,6 +32,7 @@ import numpy as np
 ext=(".txt",".csv")
 
 PlotLines=[]
+
 class InputDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super(InputDialog, self).__init__(parent)
@@ -51,6 +52,8 @@ class InputDialog(QtWidgets.QDialog):
         self.cancel_button = QtWidgets.QPushButton("Cancel", self)
         layout.addWidget(self.cancel_button)
         self.cancel_button.clicked.connect(self.reject)
+
+        
 class MyWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -66,6 +69,15 @@ class MyWindow(QtWidgets.QMainWindow):
         self.actionEnter_Frequency.triggered.connect(self.EnterFrequency)
         self.actionEnter_Magnitude.triggered.connect(self.EnterMagnitude)
         self.actionLoad.triggered.connect(self.Load)
+        self.SamplingSlider = self.findChild(QSlider,"SamplingSlider")
+        self.NoiseSlider = self.findChild(QSlider,"NoiseSlider")
+        self.SamplingSlider.valueChanged.connect(self.SamplingSlider)
+        self.NoiseSlider.valueChanged.connect(self.NoiseSlider)
+        self.SamplingSlider.setMinimum(1)
+        self.SamplingSlider.setMaximum(100)
+        self.NoiseSlider.setMinimum(1)
+        self.NoiseSlider.setMaximum(100)
+
 
     
     # def AddSin(self):
@@ -101,6 +113,11 @@ class MyWindow(QtWidgets.QMainWindow):
     #         reconstructed_signal += newplot.sampledSignal[n] * np.sinc((t-(n*sampling_interval))/sampling_interval)
     #     # Plot the reconstructed signal
     #     self.graphWidget2.plot(t, reconstructed_signal)
+    def SamplingSlider(self, value):
+        pass
+
+    def NoiseSlider(self, value):
+        pass
 
     def AddSin(self):
         newplot = PlotLine()
