@@ -83,6 +83,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.SamplingSlider.setMaximum(100)
         self.NoiseSlider.setMinimum(1)
         self.NoiseSlider.setMaximum(100)
+        self.enteredsampledfreq = None
 
 
     
@@ -121,6 +122,9 @@ class MyWindow(QtWidgets.QMainWindow):
     #     self.graphWidget2.plot(t, reconstructed_signal)
     def SamplingSliderfunc(self, value):
         self.SamplingLabel.setText(str(value))
+        self.enteredsampledfreq = int(value)
+        self.updatefunction()
+        return value
     def NoiseSliderfunc(self, value):
         self.NoiseLabel.setText(str(value))
 
@@ -167,6 +171,9 @@ class MyWindow(QtWidgets.QMainWindow):
     def sampling(self):
         newplot=PlotLines[-1]
         newplot.Samplingfrequency = (3*newplot.Frequency)
+        if (self.enteredsampledfreq != None):
+            newplot.Samplingfrequency = self.enteredsampledfreq
+
         newplot.SamplingInterval = 1 / newplot.Samplingfrequency
         t2 = np.arange(0, 1, newplot.SamplingInterval)
         if (newplot.signaltype==1):
