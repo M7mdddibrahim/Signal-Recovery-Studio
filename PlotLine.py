@@ -10,3 +10,5 @@ class PlotLine:
     signaltime=None
     signaltype=0
     islouded=0
+    sampledSignalTime=None
+    sampledSignalAmplitude=None

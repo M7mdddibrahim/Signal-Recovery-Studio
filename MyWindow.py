@@ -29,6 +29,8 @@ from fpdf import FPDF
 import random
 from PlotLine import *
 import numpy as np
+import scipy.signal
+from scipy import signal
 ext=(".txt",".csv")
 
 PlotLines=[]
@@ -69,14 +71,15 @@ class MyWindow(QtWidgets.QMainWindow):
         self.actionEnter_Frequency.triggered.connect(self.EnterFrequency)
         self.actionEnter_Magnitude.triggered.connect(self.EnterMagnitude)
         self.actionLoad.triggered.connect(self.Load)
+        self.actionRemove_all.triggered.connect(self.remove)
         self.SamplingSlider = self.findChild(QSlider,"SamplingSlider")
         self.NoiseSlider = self.findChild(QSlider,"NoiseSlider")
-        self.SamplingSlider.valueChanged.connect(self.SamplingSlider)
-        self.NoiseSlider.valueChanged.connect(self.NoiseSlider)
-        self.SamplingSlider.setMinimum(1)
-        self.SamplingSlider.setMaximum(100)
-        self.NoiseSlider.setMinimum(1)
-        self.NoiseSlider.setMaximum(100)
+        #self.SamplingSlider.valueChanged.connect(self.SamplingSlider)
+        #self.NoiseSlider.valueChanged.connect(self.NoiseSlider)
+        # self.SamplingSlider.setMinimum(1)
+        # self.SamplingSlider.setMaximum(100)
+        # self.NoiseSlider.setMinimum(1)
+        # self.NoiseSlider.setMaximum(100)
 
 
     
@@ -130,9 +133,18 @@ class MyWindow(QtWidgets.QMainWindow):
         PlotLines.append(newplot)
         self.graphWidget1.plot( newplot.signaltime, newplot.signal)
         self.sampling()
-        self.Reconstruction()
     def Reconstruction(self):
         newplot=PlotLines[-1]
+        if(newplot.islouded==1):
+            num_samples = len(newplot.sampledSignalAmplitude)
+            sampling_interval = 1.0 / newplot.Samplingfrequency
+        # Initialize the reconstructed signal
+            reconstructed_signal = np.zeros(len( newplot.sampledSignalTime))
+            for n in range(num_samples):
+              reconstructed_signal += newplot.sampledSignalAmplitude[n] * np.sinc(( newplot.sampledSignalTime-(n*sampling_interval))/sampling_interval)
+            self.graphWidget2.clear()
+            self.graphWidget2.plot( newplot.sampledSignalTime, reconstructed_signal)
+            pass
         num_samples = len(newplot.sampledSignal)
         
         # Calculate the sampling interval
@@ -147,7 +159,9 @@ class MyWindow(QtWidgets.QMainWindow):
         for n in range(num_samples):
             reconstructed_signal += newplot.sampledSignal[n] * np.sinc(( newplot.signaltime-(n*sampling_interval))/sampling_interval)
         # Plot the reconstructed signal
+        self.graphWidget2.clear()
         self.graphWidget2.plot( newplot.signaltime, reconstructed_signal)
+
     def sampling(self):
         newplot=PlotLines[-1]
         newplot.Samplingfrequency = (3*newplot.Frequency)
@@ -157,19 +171,29 @@ class MyWindow(QtWidgets.QMainWindow):
           newplot.sampledSignal = (np.sin(2 * np.pi * newplot.Frequency * t2)) * newplot.magnitude
         elif(newplot.signaltype==2):
             newplot.sampledSignal = (np.cos(2 * np.pi * newplot.Frequency * t2)) * newplot.magnitude
+        elif(newplot.islouded==1):
+            newplot.sampledSignalAmplitude,newplot.sampledSignalTime=scipy.signal.resample(newplot.data['amplitude'],int(len(newplot.data))*2,newplot.data['time'])
+
+            print('lookat')
+            print(len(newplot.sampledSignalAmplitude),len(newplot.sampledSignalTime))
+            self.graphWidget1.plot(newplot.sampledSignalTime, newplot.sampledSignalAmplitude, symbol='+')
+            self.Reconstruction()
+            pass
         self.graphWidget1.plot(t2, newplot.sampledSignal, symbol='+')
+        self.Reconstruction()
+
     def AddCos(self):
         newplot=PlotLine()
         newplot.signaltype=2
         newplot.Frequency=10
         newplot.magnitude=10
         num_points = 1000
-        t = np.linspace(0, 1, num_points)
-        newplot.signal = (np.cos(2*np.pi*newplot.Frequency*t))*newplot.magnitude
+        newplot.signaltime = np.linspace(0, 1, num_points)
+        newplot.signal = (np.cos(2*np.pi*newplot.Frequency* newplot.signaltime))*newplot.magnitude
         PlotLines.append(newplot)
-        self.graphWidget1.plot(t,newplot.signal)
+        self.graphWidget1.plot( newplot.signaltime,newplot.signal)
         self.sampling()
-        self.Reconstruction()
+
     def EnterFrequency(self):
         
           dialog = InputDialog(self)
@@ -179,6 +203,12 @@ class MyWindow(QtWidgets.QMainWindow):
              user_input = dialog.input_text.text()
              PlotLines[-1].Frequency=int(user_input)
              self.updatefunction()
+
+    def remove(self):
+        self.graphWidget1.clear()
+        self.graphWidget2.clear()
+        self.graphWidget3.clear()
+
     def EnterMagnitude(self):
         
           dialog = InputDialog(self)
@@ -194,9 +224,16 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def updatefunction(self):
          self.graphWidget1.clear()
+         newplot=PlotLines[-1]
+
          t = np.linspace(0, 1, 1000)
-         PlotLines[-1].signal=(np.sin(2*np.pi* PlotLines[-1].Frequency*t))* PlotLines[-1].magnitude
-         self.graphWidget1.plot(t,PlotLines[-1].signal)
+         if (newplot.signaltype==1):
+            newplot.signal=(np.sin(2*np.pi* newplot.Frequency*t))* newplot.magnitude
+         elif (newplot.signaltype==2):
+              newplot.signal=(np.cos(2*np.pi* newplot.Frequency*t))* newplot.magnitude
+              self.graphWidget1.plot(t,PlotLines[-1].signal)
+         self.sampling()
+         self.Reconstruction()
 
     def Load(self):
             filename = QtWidgets.QFileDialog.getOpenFileName()
@@ -214,12 +251,23 @@ class MyWindow(QtWidgets.QMainWindow):
                     newplot.data = pd.DataFrame({"time": x, "amplitude": y})
                     self.graphWidget1.plot(newplot.data['time'],newplot.data['amplitude'])
                     PlotLines.append(newplot)
+                    newplot.islouded=1
 
                 else:
                     newplot = PlotLine()
                     newplot.data = pd.read_csv(path, usecols=["time", "amplitude"])
                     self.graphWidget1.plot(newplot.data['time'],newplot.data['amplitude'])
+                    newplot.islouded=1
                     PlotLines.append(newplot)
+                    # Compute spectrogram
+                    fs = 1000  # Sampling frequency
+                    f, t, Sxx = signal.spectrogram(newplot.data['amplitude'], fs)
+
+                    # Find maximum frequency across entire signal
+                    max_index = np.argmax(np.amax(Sxx, axis=1))
+                    max_frequency = f[max_index]
+                    newplot.Frequency=max_frequency
+                    self.sampling()
             
             else:
                     self.ErrorMsg("You can only load .txt or .csv files.")

@@ -271,6 +271,7 @@
     <property name="title">
      <string>Remove</string>
     </property>
+    <addaction name="actionRemove_all"/>
    </widget>
    <addaction name="menuLoad"/>
    <addaction name="menuAdd_Signal"/>
@@ -374,6 +375,11 @@
   <action name="actionEnter_Magnitude">
    <property name="text">
     <string>Enter Magnitude</string>
+   </property>
+  </action>
+  <action name="actionRemove_all">
+   <property name="text">
+    <string>Remove all</string>
    </property>
   </action>
  </widget>
