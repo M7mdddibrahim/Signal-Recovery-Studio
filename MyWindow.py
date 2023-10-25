@@ -9,7 +9,8 @@ from PyQt5.QtWidgets import (
     QErrorMessage,
     QMessageBox,
     QDialog,
-    QSlider
+    QSlider,
+    QLabel
 )
 from collections import deque
 import pyqtgraph as pg
@@ -72,14 +73,16 @@ class MyWindow(QtWidgets.QMainWindow):
         self.actionEnter_Magnitude.triggered.connect(self.EnterMagnitude)
         self.actionLoad.triggered.connect(self.Load)
         self.actionRemove_all.triggered.connect(self.remove)
-        self.SamplingSlider = self.findChild(QSlider,"SamplingSlider")
-        self.NoiseSlider = self.findChild(QSlider,"NoiseSlider")
-        #self.SamplingSlider.valueChanged.connect(self.SamplingSlider)
-        #self.NoiseSlider.valueChanged.connect(self.NoiseSlider)
-        # self.SamplingSlider.setMinimum(1)
-        # self.SamplingSlider.setMaximum(100)
-        # self.NoiseSlider.setMinimum(1)
-        # self.NoiseSlider.setMaximum(100)
+        self.SamplingSlider = self.findChild(QSlider,"verticalSlider")
+        self.SamplingLabel = self.findChild(QLabel,"SamplingNumber")
+        self.NoiseSlider = self.findChild(QSlider,"verticalSlider_2")
+        self.NoiseLabel = self.findChild(QLabel,"NoiseNumber")
+        self.SamplingSlider.valueChanged.connect(self.SamplingSliderfunc)
+        self.NoiseSlider.valueChanged.connect(self.NoiseSliderfunc)
+        self.SamplingSlider.setMinimum(1)
+        self.SamplingSlider.setMaximum(100)
+        self.NoiseSlider.setMinimum(1)
+        self.NoiseSlider.setMaximum(100)
 
 
     
@@ -116,11 +119,10 @@ class MyWindow(QtWidgets.QMainWindow):
     #         reconstructed_signal += newplot.sampledSignal[n] * np.sinc((t-(n*sampling_interval))/sampling_interval)
     #     # Plot the reconstructed signal
     #     self.graphWidget2.plot(t, reconstructed_signal)
-    def SamplingSlider(self, value):
-        pass
-
-    def NoiseSlider(self, value):
-        pass
+    def SamplingSliderfunc(self, value):
+        self.SamplingLabel.setText(str(value))
+    def NoiseSliderfunc(self, value):
+        self.NoiseLabel.setText(str(value))
 
     def AddSin(self):
         newplot = PlotLine()
