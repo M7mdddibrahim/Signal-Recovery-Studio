@@ -83,43 +83,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.SamplingSlider.setMaximum(100)
         self.NoiseSlider.setMinimum(1)
         self.NoiseSlider.setMaximum(100)
-        self.enteredsampledfreq = None
 
-
-    
-    # def AddSin(self):
-    #     newplot = PlotLine()
-    #     newplot.Frequency = 10
-    #     newplot.magnitude = 10
-    #     num_points = 1500
-    #     t = np.linspace(0, 1, num_points)
-    #     newplot.signal = (np.sin(2 * np.pi * newplot.Frequency * t)) * newplot.magnitude
-    #     PlotLines.append(newplot)
-    #     self.graphWidget1.plot(t, newplot.signal)
-        
-    #     newplot.Samplingfrequency = 4*newplot.Frequency
-    #     newplot.SamplingInterval = 1 / newplot.Samplingfrequency
-    #     t2 = np.arange(0, 1, newplot.SamplingInterval)
-    #     newplot.sampledSignal = (np.sin(2 * np.pi * newplot.Frequency * t2)) * newplot.magnitude
-    #     self.graphWidget1.plot(t2, newplot.sampledSignal, symbol='+')
-        
-    #     # Calculate the number of samples in the input signal
-    #     num_samples = len(newplot.sampledSignal)
-        
-    #     # Calculate the sampling interval
-    #     sampling_interval = 1.0 / newplot.Samplingfrequency
-
-    #     # Create a time vector based on the original duration
-    #     t_original = np.linspace(0, 1, num_samples, endpoint=False)
-
-    #     # Initialize the reconstructed signal
-    #     reconstructed_signal = np.zeros(len(t))
-        
-    #     # Perform signal reconstruction using sinc interpolation
-    #     for n in range(num_samples):
-    #         reconstructed_signal += newplot.sampledSignal[n] * np.sinc((t-(n*sampling_interval))/sampling_interval)
-    #     # Plot the reconstructed signal
-    #     self.graphWidget2.plot(t, reconstructed_signal)
     def SamplingSliderfunc(self, value):
         self.SamplingLabel.setText(str(value))
         self.enteredsampledfreq = int(value)
@@ -127,6 +91,9 @@ class MyWindow(QtWidgets.QMainWindow):
         return value
     def NoiseSliderfunc(self, value):
         self.NoiseLabel.setText(str(value))
+        self.EnterNewNoise = int(value)
+        self.updatefunction()
+        return value
 
     def AddSin(self):
         newplot = PlotLine()
@@ -139,6 +106,7 @@ class MyWindow(QtWidgets.QMainWindow):
         PlotLines.append(newplot)
         self.graphWidget1.plot( newplot.signaltime, newplot.signal)
         self.sampling()
+
     def Reconstruction(self):
         newplot=PlotLines[-1]
         if(newplot.islouded==1):
@@ -170,18 +138,27 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def sampling(self):
         newplot=PlotLines[-1]
-        newplot.Samplingfrequency = (3*newplot.Frequency)
+        newplot.Samplingfrequency = (2*newplot.Frequency)
         if (self.enteredsampledfreq != None):
-            newplot.Samplingfrequency = self.enteredsampledfreq
+            newplot.Samplingfrequency = 2*self.enteredsampledfreq
 
         newplot.SamplingInterval = 1 / newplot.Samplingfrequency
-        t2 = np.arange(0, 1, newplot.SamplingInterval)
-        if (newplot.signaltype==1):
-          newplot.sampledSignal = (np.sin(2 * np.pi * newplot.Frequency * t2)) * newplot.magnitude
-        elif(newplot.signaltype==2):
-            newplot.sampledSignal = (np.cos(2 * np.pi * newplot.Frequency * t2)) * newplot.magnitude
-        elif(newplot.islouded==1):
-            newplot.sampledSignalAmplitude,newplot.sampledSignalTime=scipy.signal.resample(newplot.data['amplitude'],int(len(newplot.data))*2,newplot.data['time'])
+        if (self. EnterNewNoise == 0):
+            t2 = np.arange(0, 1, newplot.SamplingInterval)
+            if (newplot.signaltype==1):
+                newplot.sampledSignal = (np.sin(2 * np.pi * newplot.Frequency * t2)) * newplot.magnitude
+            elif(newplot.signaltype==2):
+                newplot.sampledSignal = (np.cos(2 * np.pi * newplot.Frequency * t2)) * newplot.magnitude
+            elif(newplot.islouded==1):
+                newplot.sampledSignalAmplitude,newplot.sampledSignalTime=scipy.signal.resample(newplot.data['amplitude'],int(len(newplot.data))*2,newplot.data['time'])
+        else:
+            t2 = np.arange(0, 1, newplot.SamplingInterval)
+            if (newplot.signaltype==1):
+                newplot.sampledSignal = (np.sin(2 * np.pi * newplot.Frequency * t2)) * newplot.magnitude + (np.random.randn(len(t2)) * self.EnterNewNoise) 
+            elif(newplot.signaltype==2):
+                newplot.sampledSignal = (np.cos(2 * np.pi * newplot.Frequency * t2)) * newplot.magnitude + (np.random.randn(len(t2)) * self.EnterNewNoise) 
+            elif(newplot.islouded==1):
+                newplot.sampledSignalAmplitude,newplot.sampledSignalTime=scipy.signal.resample(newplot.data['amplitude'],int(len(newplot.data))*2,newplot.data['time'])
 
             print('lookat')
             print(len(newplot.sampledSignalAmplitude),len(newplot.sampledSignalTime))
@@ -227,9 +204,7 @@ class MyWindow(QtWidgets.QMainWindow):
              user_input = dialog.input_text.text()
              PlotLines[-1].magnitude=int(user_input)
              self.graphWidget1.clear()
-             self.updatefunction()
-          
-            
+             self.updatefunction()              
 
     def updatefunction(self):
          self.graphWidget1.clear()
