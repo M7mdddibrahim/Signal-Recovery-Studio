@@ -32,6 +32,7 @@ from PlotLine import *
 import numpy as np
 import scipy.signal
 from scipy import signal
+import scipy.special as sp
 ext=(".txt",".csv")
 
 PlotLines=[]
@@ -80,7 +81,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.SamplingSlider.valueChanged.connect(self.SamplingSliderfunc)
         self.NoiseSlider.valueChanged.connect(self.NoiseSliderfunc)
         self.SamplingSlider.setMinimum(1)
-        self.SamplingSlider.setMaximum(100)
+        self.SamplingSlider.setMaximum(4)
         self.NoiseSlider.setMinimum(1)
         self.NoiseSlider.setMaximum(100)
         self.enteredsampledfreq = None
@@ -145,51 +146,75 @@ class MyWindow(QtWidgets.QMainWindow):
             num_samples = len(newplot.sampledSignalAmplitude)
             sampling_interval = 1.0 / newplot.Samplingfrequency
         # Initialize the reconstructed signal
-            reconstructed_signal = np.zeros(len( newplot.sampledSignalTime))
-            for n in range(num_samples):
-              reconstructed_signal += newplot.sampledSignalAmplitude[n] * np.sinc(( newplot.sampledSignalTime-(n*sampling_interval))/sampling_interval)
-            self.graphWidget2.clear()
-            self.graphWidget2.plot( newplot.sampledSignalTime, reconstructed_signal)
+            t=newplot.data['time'].values
+            reconstructed_signal = np.zeros(len( t))
+            for n in range(newplot.num_samples):
+              reconstructed_signal += newplot.sampledSignalAmplitude[n] * np.sinc((t-(n*sampling_interval))/sampling_interval)
+            # self.graphWidget2.clear()
+            # print("new signal")
+            # print(reconstructed_signal)
+            # print("old signal")
+            # print(newplot.data['amplitude'].values)
+            self.graphWidget3.plot( t, reconstructed_signal)
+          
+           
             pass
-        num_samples = len(newplot.sampledSignal)
-        
-        # Calculate the sampling interval
-        sampling_interval = 1.0 / newplot.Samplingfrequency
+        else:
+            num_samples = len(newplot.sampledSignal)
+            
+            # Calculate the sampling interval
+            sampling_interval = 1.0 / newplot.Samplingfrequency
 
-        # Create a time vector based on the original duration
+            # Create a time vector based on the original duration
 
-        # Initialize the reconstructed signal
-        reconstructed_signal = np.zeros(len( newplot.signaltime))
-        
-        # Perform signal reconstruction using sinc interpolation
-        for n in range(num_samples):
-            reconstructed_signal += newplot.sampledSignal[n] * np.sinc(( newplot.signaltime-(n*sampling_interval))/sampling_interval)
-        # Plot the reconstructed signal
-        self.graphWidget2.clear()
-        self.graphWidget2.plot( newplot.signaltime, reconstructed_signal)
+            # Initialize the reconstructed signal
+            reconstructed_signal = np.zeros(len( newplot.signaltime))
+            
+            # Perform signal reconstruction using sinc interpolation
+            for n in range(num_samples):
+                reconstructed_signal += newplot.sampledSignal[n] * np.sinc(( newplot.signaltime-(n*sampling_interval))/sampling_interval)
+            # Plot the reconstructed signal
+            self.graphWidget2.clear()
+            self.graphWidget2.plot( newplot.signaltime, reconstructed_signal)
 
     def sampling(self):
         newplot=PlotLines[-1]
         newplot.Samplingfrequency = (3*newplot.Frequency)
         if (self.enteredsampledfreq != None):
-            newplot.Samplingfrequency = self.enteredsampledfreq
+            newplot.Samplingfrequency = self.enteredsampledfreq*newplot.Frequency
 
         newplot.SamplingInterval = 1 / newplot.Samplingfrequency
         t2 = np.arange(0, 1, newplot.SamplingInterval)
         if (newplot.signaltype==1):
           newplot.sampledSignal = (np.sin(2 * np.pi * newplot.Frequency * t2)) * newplot.magnitude
+          print(len(t2), len(newplot.sampledSignal))
+          print(newplot.SamplingInterval,newplot.Samplingfrequency)
+          self.graphWidget1.plot(t2, newplot.sampledSignal, symbol='+')
+          self.Reconstruction()
         elif(newplot.signaltype==2):
             newplot.sampledSignal = (np.cos(2 * np.pi * newplot.Frequency * t2)) * newplot.magnitude
+            self.graphWidget1.plot(t2, newplot.sampledSignal, symbol='+')
+            self.Reconstruction()
         elif(newplot.islouded==1):
-            newplot.sampledSignalAmplitude,newplot.sampledSignalTime=scipy.signal.resample(newplot.data['amplitude'],int(len(newplot.data))*2,newplot.data['time'])
+            # samplesize=len(np.arange(0, newplot.data['time'].max(), newplot.SamplingInterval))
+            # sample_indices = np.random.choice(len(newplot.data['amplitude']), size=samplesize, replace=True)
+            # newplot.sampledSignalAmplitude=newplot.data['amplitude'][sample_indices]
+            # newplot.sampledSignalTime=newplot.data['time'][sample_indices]
+            # print('lookat')
+            # print((samplesize))
+            # self.graphWidget2.plot(newplot.sampledSignalTime, newplot.sampledSignalAmplitude, symbol='+')
+            # self.Reconstruction()
+            # pass
+            newplot.num_samples=int(newplot.Samplingfrequency*len(newplot.data['time']))
+            newplot.sampledSignalAmplitude,newplot.sampledSignalTime=scipy.signal.resample(newplot.data['amplitude'],int(newplot.num_samples),newplot.data['time'])
 
             print('lookat')
             print(len(newplot.sampledSignalAmplitude),len(newplot.sampledSignalTime))
-            self.graphWidget1.plot(newplot.sampledSignalTime, newplot.sampledSignalAmplitude, symbol='+')
+            self.graphWidget2.plot(newplot.sampledSignalTime, newplot.sampledSignalAmplitude, symbol='+')
             self.Reconstruction()
             pass
-        self.graphWidget1.plot(t2, newplot.sampledSignal, symbol='+')
-        self.Reconstruction()
+        # self.graphWidget1.plot(t2, newplot.sampledSignal, symbol='+')
+        # self.Reconstruction()
 
     def AddCos(self):
         newplot=PlotLine()
