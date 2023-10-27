@@ -33,6 +33,7 @@ import numpy as np
 import scipy.signal
 from scipy import signal
 import scipy.special as sp
+import math
 ext=(".txt",".csv")
 
 PlotLines=[]
@@ -81,7 +82,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.SamplingSlider.valueChanged.connect(self.SamplingSliderfunc)
         self.NoiseSlider.valueChanged.connect(self.NoiseSliderfunc)
         self.SamplingSlider.setMinimum(1)
-        self.SamplingSlider.setMaximum(4)
+        self.SamplingSlider.setMaximum(30)
         self.NoiseSlider.setMinimum(1)
         self.NoiseSlider.setMaximum(100)
         self.enteredsampledfreq = None
@@ -155,10 +156,10 @@ class MyWindow(QtWidgets.QMainWindow):
             # print(reconstructed_signal)
             # print("old signal")
             # print(newplot.data['amplitude'].values)
+            # print('recover amplitude')
+            # print(reconstructed_signal)
+            self.graphWidget3.clear()
             self.graphWidget3.plot( t, reconstructed_signal)
-          
-           
-            pass
         else:
             num_samples = len(newplot.sampledSignal)
             
@@ -205,11 +206,15 @@ class MyWindow(QtWidgets.QMainWindow):
             # self.graphWidget2.plot(newplot.sampledSignalTime, newplot.sampledSignalAmplitude, symbol='+')
             # self.Reconstruction()
             # pass
-            newplot.num_samples=int(newplot.Samplingfrequency*len(newplot.data['time']))
+            self.graphWidget1.plot(newplot.data['time'],newplot.data['amplitude'])
+            newplot.num_samples=math.ceil(newplot.Samplingfrequency*newplot.data['time'].max())
+            print('sampling frequency')
+            print(newplot.Samplingfrequency,newplot.Frequency)
             newplot.sampledSignalAmplitude,newplot.sampledSignalTime=scipy.signal.resample(newplot.data['amplitude'],int(newplot.num_samples),newplot.data['time'])
 
             print('lookat')
             print(len(newplot.sampledSignalAmplitude),len(newplot.sampledSignalTime))
+            self.graphWidget2.clear()
             self.graphWidget2.plot(newplot.sampledSignalTime, newplot.sampledSignalAmplitude, symbol='+')
             self.Reconstruction()
             pass
@@ -286,6 +291,16 @@ class MyWindow(QtWidgets.QMainWindow):
                     self.graphWidget1.plot(newplot.data['time'],newplot.data['amplitude'])
                     PlotLines.append(newplot)
                     newplot.islouded=1
+                     # Compute spectrogram
+                    fs = 1000  # Sampling frequency
+                    f, t, Sxx = signal.spectrogram(newplot.data['amplitude'], fs)
+
+                    # Find maximum frequency across entire signal
+                    max_index = np.argmax(np.amax(Sxx, axis=1))
+                    max_frequency = f[max_index]
+                   
+                    newplot.Frequency=math.ceil(max_frequency)
+                    self.sampling()
 
                 else:
                     newplot = PlotLine()
@@ -293,14 +308,25 @@ class MyWindow(QtWidgets.QMainWindow):
                     self.graphWidget1.plot(newplot.data['time'],newplot.data['amplitude'])
                     newplot.islouded=1
                     PlotLines.append(newplot)
-                    # Compute spectrogram
-                    fs = 1000  # Sampling frequency
-                    f, t, Sxx = signal.spectrogram(newplot.data['amplitude'], fs)
+                    # # Compute spectrogram
+                    # fs = 1000  # Sampling frequency
+                    # f, t, Sxx = signal.spectrogram(newplot.data['amplitude'], fs)
 
-                    # Find maximum frequency across entire signal
-                    max_index = np.argmax(np.amax(Sxx, axis=1))
-                    max_frequency = f[max_index]
-                    newplot.Frequency=max_frequency
+                    # # Find maximum frequency across entire signal
+                    # max_index = np.argmax(np.amax(Sxx, axis=1))
+                    # max_frequency = f[max_index]
+                    fft = np.fft.fft(newplot.data['amplitude'])
+
+                    # Compute the frequency spectrum
+                    freq = np.fft.fftfreq(len(newplot.data['amplitude'])) * len(newplot.data['amplitude'])
+
+                    # Find the index of the maximum value in the frequency spectrum
+                    max_index = np.argmax(np.abs(fft))
+
+                    # Compute the corresponding frequency
+                    max_freq = freq[max_index]
+                    newplot.Frequency=math.ceil(max_freq)
+                    print("max freq", newplot.Frequency)
                     self.sampling()
             
             else:
