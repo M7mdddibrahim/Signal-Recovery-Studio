@@ -91,6 +91,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.comboBox.addItem("Choose Signal")
         self.SinCount = 0
         self.CosCount = 0
+        self.SNR=None
 
 
     
@@ -138,11 +139,16 @@ class MyWindow(QtWidgets.QMainWindow):
     def SamplingSliderfunc(self, value):
         self.SamplingLabel.setText(str(value))
         self.enteredsampledfreq = int(value)
-        self.updatefunction()
+        # self.updatefunction()
+        self.sampling()
         return value
     
     def NoiseSliderfunc(self, value):
         self.NoiseLabel.setText(str(value))
+        self.enteredsampledfreq = int(value)
+        # self.updatefunction()
+        self.sampling()
+        return value
 
     def random_color(self):
         red = random.randint(0,255)
@@ -164,7 +170,7 @@ class MyWindow(QtWidgets.QMainWindow):
         newplot.name = "Sin " + str(self.SinCount)
         self.comboBox.addItem(newplot.name)
         newplot.pen = pg.mkPen(color = self.random_color())
-        newplot.data_line = self.graphWidget1.plot(newplot.signaltime, newplot.signal,pen = newplot.pen,name = newplot.name)
+        # newplot.data_line = self.graphWidget1.plot(newplot.signaltime, newplot.signal,pen = newplot.pen,name = newplot.name)
         self.ComposedSignal()
 
     def AddCos(self):
@@ -180,7 +186,7 @@ class MyWindow(QtWidgets.QMainWindow):
         newplot.name = "Cos " + str(self.CosCount)
         self.comboBox.addItem(newplot.name)
         newplot.pen = pg.mkPen(color = self.random_color())
-        newplot.data_line = self.graphWidget1.plot( newplot.signaltime,newplot.signal,pen = newplot.pen,name = newplot.name)
+        # newplot.data_line = self.graphWidget1.plot( newplot.signaltime,newplot.signal,pen = newplot.pen,name = newplot.name)
         self.ComposedSignal()
 
     def ComposedSignal(self):
@@ -194,15 +200,30 @@ class MyWindow(QtWidgets.QMainWindow):
         global SinCos
         global PlotLines
         for plot in SinCos:
-                newplot.signal = np.add(newplot.signal,plot.signal)
+                # newplot.signal = np.add(newplot.signal,plot.signal)
+                newplot.signal+=plot.signal
+                print(plot.Frequency)
+        ampltude = np.ascontiguousarray(newplot.signal)
+
+                    # Check the data type of the data
+        if ampltude.dtype != np.float64:
+            ampltude = ampltude.astype(np.float64)
+        magnitudes = np.abs(scipy.fft.rfft(ampltude))/np.max(np.abs(scipy.fft.rfft(ampltude)))
+        frequencies = scipy.fft.rfftfreq(len(newplot.signaltime), (newplot.signaltime[1] - newplot.signaltime[0]))
+        for index, frequency in enumerate(frequencies):
+            if magnitudes[index] >= 0.05: maximumFrequency = frequency
+
+        newplot.Frequency=math.ceil(maximumFrequency)
         self.graphWidget1.clear()
         PlotLines = []
         PlotLines.append(newplot)
         newplot.pen = pg.mkPen(color = self.random_color())
         newplot.name = "Composed Signal"
         newplot.data_line = self.graphWidget1.plot(newplot.signaltime,newplot.signal,pen=newplot.pen,name=newplot.name)
+        print(PlotLines)
         self.sampling()
-        self.GetChosenPlotLine()
+        # self.GetChosenPlotLine()
+        
         
     def GetChosenPlotLine(self):
         name = self.comboBox.currentText()
@@ -233,42 +254,50 @@ class MyWindow(QtWidgets.QMainWindow):
             self.graphWidget3.clear()
             self.graphWidget3.plot( t, reconstructed_signal)
         else:
-            num_samples = len(newplot.sampledSignal)
+            # num_samples = len(newplot.sampledSignal)
             
-            # Calculate the sampling interval
+            # # Calculate the sampling interval
+            # sampling_interval = 1.0 / newplot.Samplingfrequency
+
+            # # Create a time vector based on the original duration
+
+            # # Initialize the reconstructed signal
+            # reconstructed_signal = np.zeros(len( newplot.signaltime))
+            
+            # # Perform signal reconstruction using sinc interpolation
+            # for n in range(num_samples):
+            #     reconstructed_signal += newplot.sampledSignal[n] * np.sinc(( newplot.signaltime-(n*sampling_interval))/sampling_interval)
+            # # Plot the reconstructed signal
+            # self.graphWidget2.clear()
+            # self.graphWidget2.plot( newplot.signaltime, reconstructed_signal)
+            num_samples = len(newplot.sampledSignalAmplitude)
             sampling_interval = 1.0 / newplot.Samplingfrequency
-
-            # Create a time vector based on the original duration
-
-            # Initialize the reconstructed signal
-            reconstructed_signal = np.zeros(len( newplot.signaltime))
-            
-            # Perform signal reconstruction using sinc interpolation
-            for n in range(num_samples):
-                reconstructed_signal += newplot.sampledSignal[n] * np.sinc(( newplot.signaltime-(n*sampling_interval))/sampling_interval)
-            # Plot the reconstructed signal
-            self.graphWidget2.clear()
-            self.graphWidget2.plot( newplot.signaltime, reconstructed_signal)
+            t=newplot.signaltime
+            reconstructed_signal = np.zeros(len( t))
+            for n in range(newplot.num_samples):
+              reconstructed_signal += newplot.sampledSignalAmplitude[n] * np.sinc((t-(n*sampling_interval))/sampling_interval)
+            self.graphWidget3.clear()
+            self.graphWidget3.plot( t, reconstructed_signal)
 
     def sampling(self):
         newplot=PlotLines[-1]
         newplot.Samplingfrequency = (3*newplot.Frequency)
+        newplot.SamplingInterval = 1 / newplot.Samplingfrequency
         if (self.enteredsampledfreq != None):
             newplot.Samplingfrequency = self.enteredsampledfreq*newplot.Frequency
-
-        newplot.SamplingInterval = 1 / newplot.Samplingfrequency
-        t2 = np.arange(0, 1, newplot.SamplingInterval)
-        if (newplot.signaltype==1):
-          newplot.sampledSignal = (np.sin(2 * np.pi * newplot.Frequency * t2)) * newplot.magnitude
-          print(len(t2), len(newplot.sampledSignal))
-          print(newplot.SamplingInterval,newplot.Samplingfrequency)
-          self.graphWidget1.plot(t2, newplot.sampledSignal, symbol='+')
-          self.Reconstruction()
-        elif (newplot.signaltype==2):
-            newplot.sampledSignal = (np.cos(2 * np.pi * newplot.Frequency * t2)) * newplot.magnitude
-            self.graphWidget1.plot(t2, newplot.sampledSignal, symbol='+')
-            self.Reconstruction()
-        elif (newplot.islouded==1):
+        # t2 = np.arange(0, 1, newplot.SamplingInterval)
+        # if (newplot.signaltype==1):
+        #   newplot.sampledSignal = (np.sin(2 * np.pi * newplot.Frequency * t2)) * newplot.magnitude
+        #   print(len(t2), len(newplot.sampledSignal))
+        #   print(newplot.SamplingInterval,newplot.Samplingfrequency)
+        #   self.graphWidget1.plot(t2, newplot.sampledSignal, symbol='+')
+        #   self.Reconstruction()
+        # elif (newplot.signaltype==2):
+        #     newplot.sampledSignal = (np.cos(2 * np.pi * newplot.Frequency * t2)) * newplot.magnitude
+        #     self.graphWidget1.plot(t2, newplot.sampledSignal, symbol='+')
+        #     self.Reconstruction()
+            
+        if (newplot.islouded==1):
             # samplesize=len(np.arange(0, newplot.data['time'].max(), newplot.SamplingInterval))
             # sample_indices = np.random.choice(len(newplot.data['amplitude']), size=samplesize, replace=True)
             # newplot.sampledSignalAmplitude=newplot.data['amplitude'][sample_indices]
@@ -278,12 +307,14 @@ class MyWindow(QtWidgets.QMainWindow):
             # self.graphWidget2.plot(newplot.sampledSignalTime, newplot.sampledSignalAmplitude, symbol='+')
             # self.Reconstruction()
             # pass
-            self.graphWidget1.plot(newplot.data['time'],newplot.data['amplitude'],pen=newplot.pen)
+            
             newplot.num_samples=math.ceil(newplot.Samplingfrequency*newplot.data['time'].max())
             print('sampling frequency')
             print(newplot.Samplingfrequency,newplot.Frequency)
             newplot.sampledSignalAmplitude,newplot.sampledSignalTime=scipy.signal.resample(newplot.data['amplitude'],int(newplot.num_samples),newplot.data['time'])
-
+            # if(self.SNR!=None):
+            #     noise=np.random.normal(0,self.SNR/500,len(newplot.sampledSignalAmplitude))
+            #     newplot.sampledSignalAmplitude+=noise
             print('lookat')
             print(len(newplot.sampledSignalAmplitude),len(newplot.sampledSignalTime))
             self.graphWidget2.clear()
@@ -292,21 +323,39 @@ class MyWindow(QtWidgets.QMainWindow):
             pass
         # self.graphWidget1.plot(t2, newplot.sampledSignal, symbol='+')
         # self.Reconstruction()
-
-
+        elif(newplot.islouded!=1):
+            
+            newplot.num_samples=math.ceil(newplot.Samplingfrequency*newplot.signaltime.max())
+            print('sampling frequency')
+            print(newplot.Samplingfrequency,newplot.Frequency)
+            newplot.sampledSignalAmplitude,newplot.sampledSignalTime=scipy.signal.resample(newplot.signal,int(newplot.num_samples),newplot.signaltime)
+            # if(self.SNR!=None):
+            #     noise=np.random.normal(0,self.SNR/500,len(newplot.sampledSignalAmplitude))
+            #     newplot.sampledSignalAmplitude+=noise
+            self.graphWidget2.clear()
+            self.graphWidget2.plot(newplot.sampledSignalTime, newplot.sampledSignalAmplitude, symbol='+')
+            self.Reconstruction()
 
     def EnterFrequency(self):
         
           dialog = InputDialog(self)
           result = dialog.exec_()  # This will block until the user closes the dialog
-
+          newplot=self.GetChosenPlotLine()
           if result == QtWidgets.QDialog.Accepted:
              user_input = dialog.input_text.text()
-             PlotLines[-1].Frequency=int(user_input)
-             self.updatefunction()
+             newplot.Frequency=int(user_input)
+          t = np.linspace(0, 1, 1000)
+          if (newplot.signaltype==1):
+            newplot.signal=(np.sin(2*np.pi* newplot.Frequency*t))* newplot.magnitude
+          elif(newplot.signaltype==2):
+               newplot.signal=(np.cos(2*np.pi* newplot.Frequency*t))* newplot.magnitude
+              
+          self.ComposedSignal()
+            #  self.updatefunction()
 
     def remove(self):
         global PlotLines
+        global SinCos
         self.graphWidget1.clear()
         self.graphWidget2.clear()
         self.graphWidget3.clear()
@@ -315,17 +364,23 @@ class MyWindow(QtWidgets.QMainWindow):
         self.comboBox.clear()
         self.comboBox.addItem("Choose Signal")
         PlotLines = []
-
+        SinCos = []
     def EnterMagnitude(self):
         
-          dialog = InputDialog(self)
-          result = dialog.exec_()  # This will block until the user closes the dialog
-
-          if result == QtWidgets.QDialog.Accepted:
-             user_input = dialog.input_text.text()
-             PlotLines[-1].magnitude=int(user_input)
-             self.graphWidget1.clear()
-             self.updatefunction()
+        dialog = InputDialog(self)
+        result = dialog.exec_()  # This will block until the user closes the dialog
+        newplot=self.GetChosenPlotLine()
+        if result == QtWidgets.QDialog.Accepted:
+            user_input = dialog.input_text.text()
+        newplot.magnitude=int(user_input)
+        t = np.linspace(0, 1, 1000)
+        if (newplot.signaltype==1):
+            newplot.signal=(np.sin(2*np.pi* newplot.Frequency*t))* newplot.magnitude
+        elif(newplot.signaltype==2):
+            newplot.signal=(np.cos(2*np.pi* newplot.Frequency*t))* newplot.magnitude
+              
+        self.ComposedSignal()
+            
           
             
 
