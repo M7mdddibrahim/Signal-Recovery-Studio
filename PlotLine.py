@@ -3,8 +3,11 @@ class PlotLine:
     MaxFrequency=0
     magnitude=0
     data=None
-    signal=None
+    signal = None
     Frequency=0
+    name = ""
+    pen = None
+    data_line = None
     SamplingInterval=0
     sampledSignal=None
     signaltime=None
