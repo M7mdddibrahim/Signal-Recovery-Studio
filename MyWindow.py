@@ -37,6 +37,7 @@ import math
 ext=(".txt",".csv")
 
 PlotLines=[]
+SinCos = []
 
 class InputDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
@@ -127,6 +128,13 @@ class MyWindow(QtWidgets.QMainWindow):
     #     # Plot the reconstructed signal
     #     self.graphWidget2.plot(t, reconstructed_signal)
 
+    def ErrorMsg(self, text):
+        msg = QMessageBox()
+        msg.setWindowTitle("Error")
+        msg.setText(text)
+        msg.setIcon(QMessageBox.Warning)
+        x = msg.exec_()
+
     def SamplingSliderfunc(self, value):
         self.SamplingLabel.setText(str(value))
         self.enteredsampledfreq = int(value)
@@ -151,7 +159,7 @@ class MyWindow(QtWidgets.QMainWindow):
         num_points = 1000
         newplot.signaltime = np.linspace(0, 1, num_points)
         newplot.signal = (np.sin(2 * np.pi * newplot.Frequency *  newplot.signaltime)) * newplot.magnitude
-        PlotLines.append(newplot)
+        SinCos.append(newplot)
         self.SinCount += 1
         newplot.name = "Sin " + str(self.SinCount)
         self.comboBox.addItem(newplot.name)
@@ -167,7 +175,7 @@ class MyWindow(QtWidgets.QMainWindow):
         num_points = 1000
         newplot.signaltime = np.linspace(0, 1, num_points)
         newplot.signal = (np.cos(2*np.pi*newplot.Frequency* newplot.signaltime))*newplot.magnitude
-        PlotLines.append(newplot)
+        SinCos.append(newplot)
         self.CosCount += 1
         newplot.name = "Cos " + str(self.CosCount)
         self.comboBox.addItem(newplot.name)
@@ -183,9 +191,9 @@ class MyWindow(QtWidgets.QMainWindow):
         num_points = 1000
         newplot.signaltime = np.linspace(0, 1, num_points)
         newplot.signal = np.zeros(num_points)
+        global SinCos
         global PlotLines
-        for plot in PlotLines:
-            if plot.signaltype == 1 or newplot.signaltype == 2:
+        for plot in SinCos:
                 newplot.signal = np.add(newplot.signal,plot.signal)
         self.graphWidget1.clear()
         PlotLines = []
@@ -194,14 +202,15 @@ class MyWindow(QtWidgets.QMainWindow):
         newplot.name = "Composed Signal"
         newplot.data_line = self.graphWidget1.plot(newplot.signaltime,newplot.signal,pen=newplot.pen,name=newplot.name)
         self.sampling()
-
+        self.GetChosenPlotLine()
+        
     def GetChosenPlotLine(self):
         name = self.comboBox.currentText()
-        for newplot in PlotLines:
+        for newplot in SinCos:
             if name == newplot.name:
                 return newplot
                 #Succefully found the plot
-        return -1
+        self.ErrorMsg("No Chosen Signal")
         #Failed to find the plot
 
     def Reconstruction(self):
@@ -297,6 +306,7 @@ class MyWindow(QtWidgets.QMainWindow):
              self.updatefunction()
 
     def remove(self):
+        global PlotLines
         self.graphWidget1.clear()
         self.graphWidget2.clear()
         self.graphWidget3.clear()
