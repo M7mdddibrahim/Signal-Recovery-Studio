@@ -157,7 +157,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.comboBox.addItem(newplot.name)
         newplot.pen = pg.mkPen(color = self.random_color())
         newplot.data_line = self.graphWidget1.plot(newplot.signaltime, newplot.signal,pen = newplot.pen,name = newplot.name)
-        self.sampling()
+        self.ComposedSignal()
 
     def AddCos(self):
         newplot=PlotLine()
@@ -173,6 +173,26 @@ class MyWindow(QtWidgets.QMainWindow):
         self.comboBox.addItem(newplot.name)
         newplot.pen = pg.mkPen(color = self.random_color())
         newplot.data_line = self.graphWidget1.plot( newplot.signaltime,newplot.signal,pen = newplot.pen,name = newplot.name)
+        self.ComposedSignal()
+
+    def ComposedSignal(self):
+        newplot = PlotLine()
+        newplot.signaltype=2
+        newplot.Frequency=10
+        newplot.magnitude=10
+        num_points = 1000
+        newplot.signaltime = np.linspace(0, 1, num_points)
+        newplot.signal = np.zeros(num_points)
+        global PlotLines
+        for plot in PlotLines:
+            if plot.signaltype == 1 or newplot.signaltype == 2:
+                newplot.signal = np.add(newplot.signal,plot.signal)
+        self.graphWidget1.clear()
+        PlotLines = []
+        PlotLines.append(newplot)
+        newplot.pen = pg.mkPen(color = self.random_color())
+        newplot.name = "Composed Signal"
+        newplot.data_line = self.graphWidget1.plot(newplot.signaltime,newplot.signal,pen=newplot.pen,name=newplot.name)
         self.sampling()
 
     def GetChosenPlotLine(self):
