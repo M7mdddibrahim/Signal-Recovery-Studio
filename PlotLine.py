@@ -16,3 +16,5 @@ class PlotLine:
     sampledSignalTime=None
     sampledSignalAmplitude=None
     num_samples=0
+    errorGraph=None
+    reconstructed_signal=[]
