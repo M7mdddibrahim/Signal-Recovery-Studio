@@ -388,6 +388,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.verticalSlider.setValue(1)
         self.verticalSlider_2.setValue(1)
         self.SNR = None
+        self.enteredsampledfreq = None
         self.Frequency.clear()
         self.Magnitude.clear()
 
