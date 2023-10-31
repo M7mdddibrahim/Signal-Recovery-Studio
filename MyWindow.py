@@ -86,7 +86,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.actionSampling.triggered.connect(self.SamplingTextfunc)
         self.SamplingSlider.setMinimum(1)
         self.SamplingSlider.setMaximum(30)
-        self.NoiseSlider.setMinimum(1)
+        self.NoiseSlider.setMinimum(0)
         self.NoiseSlider.setMaximum(50)
         self.SamplingSlider.valueChanged.connect(self.SamplingSliderfunc)
         self.NoiseSlider.valueChanged.connect(self.NoiseSliderfunc)
@@ -306,10 +306,38 @@ class MyWindow(QtWidgets.QMainWindow):
                 symbol="o",
             )
             self.graphWidget1.addItem(scatterPlotItem)
-
             self.Reconstruction()
             pass
-
+            if self.SNR == int(0):
+                newplot.num_samples = math.ceil(
+                    newplot.Samplingfrequency * newplot.data["time"].max()
+                )
+                print("sampling frequency")
+                print(newplot.Samplingfrequency, newplot.Frequency)
+                (
+                    newplot.sampledSignalAmplitude,
+                    newplot.sampledSignalTime,
+                ) = scipy.signal.resample(
+                    newplot.data["amplitude"],
+                    int(newplot.num_samples),
+                    newplot.data["time"],
+                )
+            self.graphWidget1.clear()
+            newplot.data_line = self.graphWidget1.plot(
+                newplot.data["time"],
+                newplot.data["amplitude"],
+                pen=newplot.pen,
+                name=newplot.name,
+            )
+            scatterPlotItem = pg.ScatterPlotItem(
+                newplot.sampledSignalTime,
+                newplot.sampledSignalAmplitude,
+                size=10,
+                pen=None,
+                symbol="o",
+            )
+            self.graphWidget1.addItem(scatterPlotItem)
+            self.Reconstruction()
         elif newplot.islouded != 1:
             newplot.num_samples = math.ceil(
                 newplot.Samplingfrequency * newplot.signaltime.max()
@@ -334,7 +362,6 @@ class MyWindow(QtWidgets.QMainWindow):
                     * newplot.magnitude
                     * 10
                 )
-
                 newplot.sampledSignalAmplitude += noise
             self.graphWidget1.clear()
             newplot.data_line = self.graphWidget1.plot(
