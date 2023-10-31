@@ -387,6 +387,7 @@ class MyWindow(QtWidgets.QMainWindow):
         SinCos = []
         self.verticalSlider.setValue(1)
         self.verticalSlider_2.setValue(1)
+        self.SNR = None
         self.Frequency.clear()
         self.Magnitude.clear()
 
