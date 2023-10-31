@@ -379,6 +379,35 @@ class MyWindow(QtWidgets.QMainWindow):
             #     newplot.sampledSignalTime, newplot.sampledSignalAmplitude, symbol="+"
             # )
             self.Reconstruction()
+            if self.SNR == int(0):
+                newplot.num_samples = math.ceil(
+                newplot.Samplingfrequency * newplot.signaltime.max()
+                )
+                print("sampling frequency")
+                print(newplot.Samplingfrequency, newplot.Frequency)
+                (
+                    newplot.sampledSignalAmplitude,
+                    newplot.sampledSignalTime,
+                ) = scipy.signal.resample(
+                    newplot.signal, int(newplot.num_samples), newplot.signaltime
+                )
+            self.graphWidget1.clear()
+            newplot.data_line = self.graphWidget1.plot(
+                newplot.signaltime, newplot.signal, pen=newplot.pen, name=newplot.name
+            )
+            scatterPlotItem = pg.ScatterPlotItem(
+                newplot.sampledSignalTime,
+                newplot.sampledSignalAmplitude,
+                size=10,
+                pen=None,
+                symbol="o",
+            )
+            self.graphWidget1.addItem(scatterPlotItem)
+            # self.graphWidget2.plot(
+            #     newplot.sampledSignalTime, newplot.sampledSignalAmplitude, symbol="+"
+            # )
+            self.Reconstruction()
+        
 
     def EnterFrequency(self):
         # dialog = InputDialog(self)
