@@ -240,7 +240,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
             newplot.reconstructed_signal = reconstructed_signal
             self.graphWidget2.clear()
-            self.graphWidget2.plot(t, reconstructed_signal)
+            self.graphWidget2.plot(t, reconstructed_signal,pen='y')
             self.ErrorGraph()
         else:
             num_samples = len(newplot.sampledSignalAmplitude)
@@ -253,7 +253,7 @@ class MyWindow(QtWidgets.QMainWindow):
                 )
             newplot.reconstructed_signal = reconstructed_signal
             self.graphWidget2.clear()
-            self.graphWidget2.plot(t, reconstructed_signal)
+            self.graphWidget2.plot(t, reconstructed_signal,pen='y')
             self.ErrorGraph()
 
     def sampling(self):
