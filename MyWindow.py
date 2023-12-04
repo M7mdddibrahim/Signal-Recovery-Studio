@@ -214,7 +214,7 @@ class MyWindow(QtWidgets.QMainWindow):
         newplot.data_line = self.graphWidget1.plot(
             newplot.signaltime, newplot.signal, pen=newplot.pen, name=newplot.name
         )
-        print(PlotLines)
+        # print(PlotLines)
         self.sampling()
         # self.GetChosenPlotLine()
 
@@ -259,16 +259,17 @@ class MyWindow(QtWidgets.QMainWindow):
             self.ErrorGraph()
 
     def sampling(self):
+     if len(PlotLines)>0:
         newplot = PlotLines[-1]
         if self.isSliderOrText == 0:
             newplot.Samplingfrequency = (2 * newplot.Frequency) + 1
             newplot.SamplingInterval = 1 / newplot.Samplingfrequency
-        elif self.isSliderOrText == 1:
+        elif self.isSliderOrText == 1 and self.enteredsampledfreq != None :
             newplot.Samplingfrequency = (
                 self.enteredsampledfreq * newplot.Frequency
             ) + 1
             newplot.SamplingInterval = 1 / newplot.Samplingfrequency
-        elif self.isSliderOrText == 2:
+        elif self.isSliderOrText == 2  and self.enteredsampledfreq != None :
             newplot.Samplingfrequency = self.enteredsampledfreq
             newplot.SamplingInterval = 1 / newplot.Samplingfrequency
 
@@ -419,17 +420,18 @@ class MyWindow(QtWidgets.QMainWindow):
         # result = dialog.exec_()  # This will block until the user closes the dialog
         newplot = self.GetChosenPlotLine()
         # if result == QtWidgets.QDialog.Accepted:
-        user_input = int(self.Frequency.text())
-        newplot.Frequency = int(user_input)
-        t = np.linspace(0, 1, 1000)
-        if newplot.signaltype == 1:
-            newplot.signal = (
-                np.sin(2 * np.pi * newplot.Frequency * t)
-            ) * newplot.magnitude
-        elif newplot.signaltype == 2:
-            newplot.signal = (
-                np.cos(2 * np.pi * newplot.Frequency * t)
-            ) * newplot.magnitude
+        if self.Frequency.text() :
+            user_input = int(self.Frequency.text())
+            newplot.Frequency = int(user_input)
+            t = np.linspace(0, 1, 1000)
+            if newplot.signaltype == 1:
+                newplot.signal = (
+                    np.sin(2 * np.pi * newplot.Frequency * t)
+                ) * newplot.magnitude
+            elif newplot.signaltype == 2:
+                newplot.signal = (
+                    np.cos(2 * np.pi * newplot.Frequency * t)
+                ) * newplot.magnitude
 
         self.ComposedSignal()
         #  self.updatefunction()
@@ -456,17 +458,18 @@ class MyWindow(QtWidgets.QMainWindow):
     def EnterMagnitude(self):
         # This will block until the user closes the dialog
         newplot = self.GetChosenPlotLine()
-        user_input = int(self.Magnitude.text())
-        newplot.magnitude = int(user_input)
-        t = np.linspace(0, 1, 1000)
-        if newplot.signaltype == 1:
-            newplot.signal = (
-                np.sin(2 * np.pi * newplot.Frequency * t)
-            ) * newplot.magnitude
-        elif newplot.signaltype == 2:
-            newplot.signal = (
-                np.cos(2 * np.pi * newplot.Frequency * t)
-            ) * newplot.magnitude
+        if self.Magnitude.text(): 
+            user_input = int(self.Magnitude.text())
+            newplot.magnitude = int(user_input)
+            t = np.linspace(0, 1, 1000)
+            if newplot.signaltype == 1:
+                newplot.signal = (
+                    np.sin(2 * np.pi * newplot.Frequency * t)
+                ) * newplot.magnitude
+            elif newplot.signaltype == 2:
+                newplot.signal = (
+                    np.cos(2 * np.pi * newplot.Frequency * t)
+                ) * newplot.magnitude
 
         self.ComposedSignal()
 
@@ -611,9 +614,9 @@ class MyWindow(QtWidgets.QMainWindow):
         self.graphWidget3.clear()
         if newplot.isloaded == 1:
             newplot.errorGraph = (
-                newplot.reconstructed_signal - newplot.data["amplitude"]
+                newplot.data["amplitude"]- newplot.reconstructed_signal 
             )
             self.graphWidget3.plot(newplot.data["time"], newplot.errorGraph)
         else:
-            newplot.errorGraph = newplot.reconstructed_signal - newplot.signal
+            newplot.errorGraph = newplot.signal-newplot.reconstructed_signal 
             self.graphWidget3.plot(newplot.signaltime, newplot.errorGraph)
