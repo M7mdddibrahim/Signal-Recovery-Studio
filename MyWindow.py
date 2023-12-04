@@ -184,26 +184,29 @@ class MyWindow(QtWidgets.QMainWindow):
         newplot.signal = np.zeros(num_points)
         global SinCos
         global PlotLines
+        fmax = 0
         for plot in SinCos:
             # newplot.signal = np.add(newplot.signal,plot.signal)
             newplot.signal += plot.signal
             print(plot.Frequency)
+            if plot.Frequency > fmax:
+                fmax = plot.Frequency
+        newplot.Frequency=fmax
         ampltude = np.ascontiguousarray(newplot.signal)
-
         # Check the data type of the data
-        if ampltude.dtype != np.float64:
-            ampltude = ampltude.astype(np.float64)
-        magnitudes = np.abs(scipy.fft.rfft(ampltude)) / np.max(
-            np.abs(scipy.fft.rfft(ampltude))
-        )
-        frequencies = scipy.fft.rfftfreq(
-            len(newplot.signaltime), (newplot.signaltime[1] - newplot.signaltime[0])
-        )
-        for index, frequency in enumerate(frequencies):
-            if magnitudes[index] >= 0.05:
-                maximumFrequency = frequency
+        # if ampltude.dtype != np.float64:
+        #     ampltude = ampltude.astype(np.float64)
+        # magnitudes = np.abs(scipy.fft.rfft(ampltude)) / np.max(
+        #     np.abs(scipy.fft.rfft(ampltude))
+        # )
+        # frequencies = scipy.fft.rfftfreq(
+        #     len(newplot.signaltime), (newplot.signaltime[1] - newplot.signaltime[0])
+        # )
+        # for index, frequency in enumerate(frequencies):
+        #     if magnitudes[index] >= 0.05:
+        #         maximumFrequency = frequency
 
-        newplot.Frequency = math.ceil(maximumFrequency)
+        # newplot.Frequency = math.ceil(maximumFrequency)
         self.graphWidget1.clear()
         PlotLines = []
         PlotLines.append(newplot)
@@ -231,7 +234,7 @@ class MyWindow(QtWidgets.QMainWindow):
             num_samples = len(newplot.sampledSignalAmplitude)
             sampling_interval = 1.0 / newplot.Samplingfrequency
             # Initialize the reconstructed signal
-            t = newplot.data["time"].values
+            t = newplot.data["time"]
             reconstructed_signal = np.zeros(len(t))
             for n in range(newplot.num_samples):
                 reconstructed_signal += newplot.sampledSignalAmplitude[n] * np.sinc(
@@ -288,7 +291,10 @@ class MyWindow(QtWidgets.QMainWindow):
                 noise = np.random.normal(
                     0, 10 ** (-self.SNR / 20), len(newplot.sampledSignalAmplitude)
                 )
-                newplot.sampledSignalAmplitude += noise
+                if newplot.isDat == 1:
+                    newplot.sampledSignalAmplitude += noise*1000000
+                else:
+                    newplot.sampledSignalAmplitude += noise
             print("lookat")
             print(len(newplot.sampledSignalAmplitude), len(newplot.sampledSignalTime))
             self.graphWidget1.clear()
@@ -482,11 +488,12 @@ class MyWindow(QtWidgets.QMainWindow):
         self.sampling()
         self.Reconstruction()
 
+    
     def Load(self):
         filename = QtWidgets.QFileDialog.getOpenFileName()
         path = filename[0]
-        if path.endswith(ext):
-            if path.endswith(".txt"):
+
+        if path.endswith(".txt"):
                 with open(path, "r") as data:
                     x = []
                     y = []
@@ -526,7 +533,7 @@ class MyWindow(QtWidgets.QMainWindow):
                 newplot.Frequency = math.ceil(maximumFrequency)
                 self.sampling()
 
-            else:
+        elif path.endswith(".csv"):
                 newplot = PlotLine()
                 newplot.data = pd.read_csv(path, usecols=["time", "amplitude"])
                 newplot.name = "Signal 1"
@@ -560,8 +567,45 @@ class MyWindow(QtWidgets.QMainWindow):
                 print("max freq", newplot.Frequency)
                 self.sampling()
 
-        else:
-            self.ErrorMsg("You can only load .txt or .csv files.")
+        elif path.endswith(".dat"):
+                string2 = ".dat"
+                newpath = path.replace(string2, ".hea")
+                with open(newpath, 'rb') as file:
+                    # Read the first line which contains the data
+                    first_line = file.readline().strip()
+
+                    # Split the line by spaces to get columns
+                    columns = first_line.split()
+
+                    # Extract the integer from the second column
+                    fs = int(columns[2])
+                    print(fs)
+                with open(path, 'rb') as file:
+                    # Read binary data
+                    binary_data = file.read()
+                    
+                    # Convert binary data to a 1D array of integers
+                    values = np.frombuffer(binary_data, dtype=np.int32)
+                    
+                #fs is already known in medical signals
+                    # fs = 500.0  # Sample rate in Hz
+                    newplot = PlotLine()
+                    newplot.isDat = 1
+                    PlotLines.append(newplot)
+                    # Calculate time values
+                    time_values = np.arange(0, len(values) / fs, 1 / fs)
+                    newplot.Samplingfrequency=fs
+                    newplot.time=time_values
+                    newplot.amplitude=values
+                    data = {}
+                    data['time'] = time_values[0:500]
+                    data['amplitude'] = values[0:500]
+                    newplot.data=data
+                    newplot.islouded=1
+                    newplot.Frequency=newplot.Samplingfrequency/2
+                    self.sampling()
+
+        
 
     def ErrorGraph(self):
         newplot = PlotLines[-1]

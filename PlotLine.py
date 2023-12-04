@@ -18,3 +18,4 @@ class PlotLine:
     num_samples=0
     errorGraph=None
     reconstructed_signal=[]
+    isDat = 0
