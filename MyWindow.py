@@ -176,7 +176,6 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def ComposedSignal(self):
         newplot = PlotLine()
-        newplot.signaltype = 2
         newplot.Frequency = 10
         newplot.magnitude = 10
         num_points = 1000
@@ -192,7 +191,7 @@ class MyWindow(QtWidgets.QMainWindow):
             if plot.Frequency > fmax:
                 fmax = plot.Frequency
         newplot.Frequency=fmax
-        ampltude = np.ascontiguousarray(newplot.signal)
+        #ampltude = np.ascontiguousarray(newplot.signal)
         # Check the data type of the data
         # if ampltude.dtype != np.float64:
         #     ampltude = ampltude.astype(np.float64)
@@ -230,7 +229,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def Reconstruction(self):
         newplot = PlotLines[-1]
-        if newplot.islouded == 1:
+        if newplot.isloaded == 1:
             num_samples = len(newplot.sampledSignalAmplitude)
             sampling_interval = 1.0 / newplot.Samplingfrequency
             # Initialize the reconstructed signal
@@ -273,7 +272,7 @@ class MyWindow(QtWidgets.QMainWindow):
             newplot.Samplingfrequency = self.enteredsampledfreq
             newplot.SamplingInterval = 1 / newplot.Samplingfrequency
 
-        if newplot.islouded == 1:
+        if newplot.isloaded == 1:
             newplot.num_samples = math.ceil(
                 newplot.Samplingfrequency * newplot.data["time"].max()
             )
@@ -344,7 +343,7 @@ class MyWindow(QtWidgets.QMainWindow):
             )
             self.graphWidget1.addItem(scatterPlotItem)
             self.Reconstruction()
-        elif newplot.islouded != 1:
+        elif newplot.isloaded != 1:
             newplot.num_samples = math.ceil(
                 newplot.Samplingfrequency * newplot.signaltime.max()
             )
@@ -471,22 +470,22 @@ class MyWindow(QtWidgets.QMainWindow):
 
         self.ComposedSignal()
 
-    def updatefunction(self):
-        self.graphWidget1.clear()
-        newplot = PlotLines[-1]
+    # def updatefunction(self):
+    #     self.graphWidget1.clear()
+    #     newplot = PlotLines[-1]
 
-        t = np.linspace(0, 1, 1000)
-        if newplot.signaltype == 1:
-            newplot.signal = (
-                np.sin(2 * np.pi * newplot.Frequency * t)
-            ) * newplot.magnitude
-        elif newplot.signaltype == 2:
-            newplot.signal = (
-                np.cos(2 * np.pi * newplot.Frequency * t)
-            ) * newplot.magnitude
-            self.graphWidget1.plot(t, PlotLines[-1].signal)
-        self.sampling()
-        self.Reconstruction()
+    #     t = np.linspace(0, 1, 1000)
+    #     if newplot.signaltype == 1:
+    #         newplot.signal = (
+    #             np.sin(2 * np.pi * newplot.Frequency * t)
+    #         ) * newplot.magnitude
+    #     elif newplot.signaltype == 2:
+    #         newplot.signal = (
+    #             np.cos(2 * np.pi * newplot.Frequency * t)
+    #         ) * newplot.magnitude
+    #         self.graphWidget1.plot(t, PlotLines[-1].signal)
+    #     self.sampling()
+    #     self.Reconstruction()
 
     
     def Load(self):
@@ -512,7 +511,7 @@ class MyWindow(QtWidgets.QMainWindow):
                     name=newplot.name,
                 )
                 PlotLines.append(newplot)
-                newplot.islouded = 1
+                newplot.isloaded = 1
 
                 ampltude = np.ascontiguousarray(newplot.data["amplitude"])
 
@@ -544,7 +543,7 @@ class MyWindow(QtWidgets.QMainWindow):
                     pen=newplot.pen,
                     name=newplot.name,
                 )
-                newplot.islouded = 1
+                newplot.isloaded = 1
                 PlotLines.append(newplot)
 
                 ampltude = np.ascontiguousarray(newplot.data["amplitude"])
@@ -601,7 +600,7 @@ class MyWindow(QtWidgets.QMainWindow):
                     data['time'] = time_values[0:500]
                     data['amplitude'] = values[0:500]
                     newplot.data=data
-                    newplot.islouded=1
+                    newplot.isloaded=1
                     newplot.Frequency=newplot.Samplingfrequency/2
                     self.sampling()
 
@@ -610,7 +609,7 @@ class MyWindow(QtWidgets.QMainWindow):
     def ErrorGraph(self):
         newplot = PlotLines[-1]
         self.graphWidget3.clear()
-        if newplot.islouded == 1:
+        if newplot.isloaded == 1:
             newplot.errorGraph = (
                 newplot.reconstructed_signal - newplot.data["amplitude"]
             )
