@@ -139,11 +139,11 @@ class MyWindow(QtWidgets.QMainWindow):
     def AddSin(self):
         newplot = PlotLine()
         newplot.signaltype = 1
-        newplot.Frequency = 5
+        newplot.Frequency = 1
         newplot.magnitude = 10
-        num_points = 1000
-        self.enteredsampledfreq = 10
-        newplot.signaltime = np.linspace(0, 1, num_points)
+        num_points = 3000
+        self.enteredsampledfreq = 2
+        newplot.signaltime = np.linspace(0, 10, num_points)
         newplot.signal = (
             np.sin(2 * np.pi * newplot.Frequency * newplot.signaltime)
         ) * newplot.magnitude
@@ -158,11 +158,11 @@ class MyWindow(QtWidgets.QMainWindow):
     def AddCos(self):
         newplot = PlotLine()
         newplot.signaltype = 2
-        newplot.Frequency = 10
+        newplot.Frequency = 1
         newplot.magnitude = 10
-        num_points = 1000
-        self.enteredsampledfreq = 10
-        newplot.signaltime = np.linspace(0, 1, num_points)
+        num_points = 3000
+        self.enteredsampledfreq = 2
+        newplot.signaltime = np.linspace(0, 10, num_points)
         newplot.signal = (
             np.cos(2 * np.pi * newplot.Frequency * newplot.signaltime)
         ) * newplot.magnitude
@@ -176,10 +176,10 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def ComposedSignal(self):
         newplot = PlotLine()
-        newplot.Frequency = 10
+        newplot.Frequency = 1
         newplot.magnitude = 10
-        num_points = 1000
-        newplot.signaltime = np.linspace(0, 1, num_points)
+        num_points = 3000
+        newplot.signaltime = np.linspace(0, 10, num_points)
         newplot.signal = np.zeros(num_points)
         global SinCos
         global PlotLines
@@ -265,9 +265,14 @@ class MyWindow(QtWidgets.QMainWindow):
             newplot.Samplingfrequency = (2 * newplot.Frequency) + 1
             newplot.SamplingInterval = 1 / newplot.Samplingfrequency
         elif self.isSliderOrText == 1 and self.enteredsampledfreq != None :
-            newplot.Samplingfrequency = (
+            if self.enteredsampledfreq==1:
+                 newplot.Samplingfrequency = (
                 self.enteredsampledfreq * newplot.Frequency
-            ) + 1
+            ) 
+            else:
+                newplot.Samplingfrequency = (
+                    self.enteredsampledfreq * newplot.Frequency
+                ) + 1
             newplot.SamplingInterval = 1 / newplot.Samplingfrequency
         elif self.isSliderOrText == 2  and self.enteredsampledfreq != None :
             newplot.Samplingfrequency = self.enteredsampledfreq
@@ -423,7 +428,7 @@ class MyWindow(QtWidgets.QMainWindow):
         if self.Frequency.text() :
             user_input = int(self.Frequency.text())
             newplot.Frequency = int(user_input)
-            t = np.linspace(0, 1, 1000)
+            t = np.linspace(0, 10, 3000)
             if newplot.signaltype == 1:
                 newplot.signal = (
                     np.sin(2 * np.pi * newplot.Frequency * t)
@@ -600,8 +605,8 @@ class MyWindow(QtWidgets.QMainWindow):
                     newplot.time=time_values
                     newplot.amplitude=values
                     data = {}
-                    data['time'] = time_values[0:500]
-                    data['amplitude'] = values[0:500]
+                    data['time'] = time_values[0:2000]
+                    data['amplitude'] = values[0:2000]
                     newplot.data=data
                     newplot.isloaded=1
                     newplot.Frequency=newplot.Samplingfrequency/2
