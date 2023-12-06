@@ -65,7 +65,7 @@ class InputDialog(QtWidgets.QDialog):
 class MyWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
-        self.ui = uic.loadUi("GUI-2.ui", self)
+        self.ui = uic.loadUi("GUI-3.ui", self)
         self.graphWidget1 = pg.PlotWidget()
         self.legend1 = self.graphWidget1.addLegend()
         self.graphWidget2 = pg.PlotWidget()
@@ -79,23 +79,26 @@ class MyWindow(QtWidgets.QMainWindow):
         self.Magnitude.textChanged.connect(self.EnterMagnitude)
         self.actionLoad.triggered.connect(self.Load)
         self.ClearGraph.clicked.connect(self.remove)
-        self.SamplingSlider = self.findChild(QSlider, "verticalSlider")
-        self.SamplingLabel = self.findChild(QLabel, "SamplingNumber")
+        self.SamplinginFmax = self.findChild(QSlider, "verticalSlider")
+        self.SamplingLabel = self.findChild(QLabel, "FMaxNum")
         self.NoiseSlider = self.findChild(QSlider, "verticalSlider_2")
-        self.NoiseLabel = self.findChild(QLabel, "NoiseNumber")
+        self.NoiseLabel = self.findChild(QLabel, "NoiseNum")
+        self.SamplinginHz = self.findChild(QSlider, "verticalSlider_3")
+        self.SamplingInHzLabel = self.findChild(QLabel, "HzNum")
         self.actionSampling.triggered.connect(self.SamplingTextfunc)
-        self.SamplingSlider.setMinimum(1)
-        self.SamplingSlider.setMaximum(30)
+        self.SamplinginFmax.setMinimum(1)
+        self.SamplinginFmax.setMaximum(30)
         self.NoiseSlider.setMinimum(0)
         self.NoiseSlider.setMaximum(50)
-        self.SamplingSlider.valueChanged.connect(self.SamplingSliderfunc)
+        self.SamplinginFmax.valueChanged.connect(self.samplingInFmaxFunc)
         self.NoiseSlider.valueChanged.connect(self.NoiseSliderfunc)
+        self.SamplinginHz.valueChanged.connect(self.samplingInHz)
         self.enteredsampledfreq = None
         self.comboBox.addItem("Choose Signal")
         self.SinCount = 0
         self.CosCount = 0
         self.SNR = None
-        self.isSliderOrText = 0
+        self.isFmax_Text_Hz = 0
 
     def ErrorMsg(self, text):
         msg = QMessageBox()
@@ -104,8 +107,8 @@ class MyWindow(QtWidgets.QMainWindow):
         msg.setIcon(QMessageBox.Warning)
         x = msg.exec_()
 
-    def SamplingSliderfunc(self, value):
-        self.isSliderOrText = 1
+    def samplingInFmaxFunc(self, value):
+        self.isFmax_Text_Hz = 1
         self.SamplingLabel.setText(str(value))
         self.enteredsampledfreq = int(value)
         # self.updatefunction()
@@ -113,7 +116,7 @@ class MyWindow(QtWidgets.QMainWindow):
         return value
 
     def SamplingTextfunc(self, value):
-        self.isSliderOrText = 2
+        self.isFmax_Text_Hz = 2
         dialog = InputDialog(self)
         result = dialog.exec_()  # This will block until the user closes the dialog
         if result == QtWidgets.QDialog.Accepted:
@@ -126,6 +129,16 @@ class MyWindow(QtWidgets.QMainWindow):
     def NoiseSliderfunc(self, value):
         self.NoiseLabel.setText(str(value))
         self.SNR = int(value)
+        # self.updatefunction()
+        self.sampling()
+
+    def samplingInHz(self, value):
+        self.isFmax_Text_Hz = 3
+        newplot =PlotLines[-1]
+        self.SamplinginHz.setMinimum(newplot.MaxFrequency)
+        self.SamplinginHz.setMaximum(6*newplot.MaxFrequency)
+        self.SamplingInHzLabel.setText(str(value))
+        self.enteredsampledfreq = int(value)
         # self.updatefunction()
         self.sampling()
 
@@ -261,10 +274,10 @@ class MyWindow(QtWidgets.QMainWindow):
     def sampling(self):
      if len(PlotLines)>0:
         newplot = PlotLines[-1]
-        if self.isSliderOrText == 0:
+        if self.isFmax_Text_Hz == 0:
             newplot.Samplingfrequency = (2 * newplot.Frequency) + 1
             newplot.SamplingInterval = 1 / newplot.Samplingfrequency
-        elif self.isSliderOrText == 1 and self.enteredsampledfreq != None :
+        elif self.isFmax_Text_Hz == 1 and self.enteredsampledfreq != None :
             if self.enteredsampledfreq==1:
                  newplot.Samplingfrequency = (
                 self.enteredsampledfreq * newplot.Frequency
@@ -274,10 +287,12 @@ class MyWindow(QtWidgets.QMainWindow):
                     self.enteredsampledfreq * newplot.Frequency
                 ) + 1
             newplot.SamplingInterval = 1 / newplot.Samplingfrequency
-        elif self.isSliderOrText == 2  and self.enteredsampledfreq != None :
+        elif self.isFmax_Text_Hz == 2  and self.enteredsampledfreq != None :
             newplot.Samplingfrequency = self.enteredsampledfreq
             newplot.SamplingInterval = 1 / newplot.Samplingfrequency
-
+        elif self.isFmax_Text_Hz == 3  and self.enteredsampledfreq != None :
+            newplot.Samplingfrequency = self.enteredsampledfreq
+            newplot.SamplingInterval = 1 / newplot.Samplingfrequency
         if newplot.isloaded == 1:
             newplot.num_samples = math.ceil(
                 newplot.Samplingfrequency * newplot.data["time"].max()
@@ -361,7 +376,7 @@ class MyWindow(QtWidgets.QMainWindow):
             ) = scipy.signal.resample(
                 newplot.signal, int(newplot.num_samples), newplot.signaltime
             )
-            if self.SNR != None:
+            if self.SNR != None:        
                 noise = (
                     (
                         np.random.normal(
@@ -454,8 +469,10 @@ class MyWindow(QtWidgets.QMainWindow):
         PlotLines = []
         SinCos = []
         self.verticalSlider.setValue(1)
-        self.verticalSlider_2.setValue(1)
+        self.verticalSlider_2.setValue(0)
+        self.verticalSlider_3.setValue(1)
         self.SNR = None
+        self.SNR2 = None
         self.enteredsampledfreq = None
         self.Frequency.clear()
         self.Magnitude.clear()
