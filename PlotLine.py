@@ -12,9 +12,10 @@ class PlotLine:
     sampledSignal=None
     signaltime=None
     signaltype=0
-    islouded=0
+    isloaded=0
     sampledSignalTime=None
     sampledSignalAmplitude=None
     num_samples=0
     errorGraph=None
     reconstructed_signal=[]
+    isDat = 0
