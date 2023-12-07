@@ -77,6 +77,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.CosButton.clicked.connect(self.AddCos)
         self.Frequency.textChanged.connect(self.EnterFrequency)
         self.Magnitude.textChanged.connect(self.EnterMagnitude)
+        self.Phase.textChanged.connect(self.EnterPhase)
         self.actionLoad.triggered.connect(self.Load)
         self.ClearGraph.clicked.connect(self.remove)
         self.SamplinginFmax = self.findChild(QSlider, "verticalSlider")
@@ -85,6 +86,8 @@ class MyWindow(QtWidgets.QMainWindow):
         self.NoiseLabel = self.findChild(QLabel, "NoiseNum")
         self.SamplinginHz = self.findChild(QSlider, "verticalSlider_3")
         self.SamplingInHzLabel = self.findChild(QLabel, "HzNum")
+        self.samplingFreqNum = self.findChild(QLabel, "label_18")
+        self.Fmax = self.findChild(QLabel, "label_20")
         self.actionSampling.triggered.connect(self.SamplingTextfunc)
         self.SamplinginFmax.setMinimum(1)
         self.SamplinginFmax.setMaximum(30)
@@ -109,6 +112,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def samplingInFmaxFunc(self, value):
         self.isFmax_Text_Hz = 1
+        self.SamplinginHz.setValue(1)
         self.SamplingLabel.setText(str(value))
         self.enteredsampledfreq = int(value)
         # self.updatefunction()
@@ -121,7 +125,7 @@ class MyWindow(QtWidgets.QMainWindow):
         result = dialog.exec_()  # This will block until the user closes the dialog
         if result == QtWidgets.QDialog.Accepted:
             value = dialog.input_text.text()
-        self.SamplingLabel.setText(str(value))
+        # self.SamplingLabel.setText(str(value))
         self.enteredsampledfreq = int(value)
         self.sampling()
         return value
@@ -134,9 +138,10 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def samplingInHz(self, value):
         self.isFmax_Text_Hz = 3
-        newplot =PlotLines[-1]
-        self.SamplinginHz.setMinimum(newplot.MaxFrequency)
-        self.SamplinginHz.setMaximum(6*newplot.MaxFrequency)
+        self.SamplinginFmax.setValue(1)
+        newplot = PlotLines[-1]
+        self.SamplinginHz.setMinimum(1)
+        self.SamplinginHz.setMaximum(6*(newplot.Frequency))
         self.SamplingInHzLabel.setText(str(value))
         self.enteredsampledfreq = int(value)
         # self.updatefunction()
@@ -287,16 +292,15 @@ class MyWindow(QtWidgets.QMainWindow):
                     self.enteredsampledfreq * newplot.Frequency
                 ) + 1
             newplot.SamplingInterval = 1 / newplot.Samplingfrequency
-        elif self.isFmax_Text_Hz == 2  and self.enteredsampledfreq != None :
-            newplot.Samplingfrequency = self.enteredsampledfreq
-            newplot.SamplingInterval = 1 / newplot.Samplingfrequency
-        elif self.isFmax_Text_Hz == 3  and self.enteredsampledfreq != None :
+        elif (self.isFmax_Text_Hz == 2 or self.isFmax_Text_Hz == 3)  and self.enteredsampledfreq != None :
             newplot.Samplingfrequency = self.enteredsampledfreq
             newplot.SamplingInterval = 1 / newplot.Samplingfrequency
         if newplot.isloaded == 1:
             newplot.num_samples = math.ceil(
                 newplot.Samplingfrequency * newplot.data["time"].max()
             )
+            self.samplingFreqNum.setText(f"Value: {newplot.Samplingfrequency}")
+            self.Fmax.setText(f"Value: {(newplot.Samplingfrequency)/2}")
             print("sampling frequency")
             print(newplot.Samplingfrequency, newplot.Frequency)
             (
@@ -338,6 +342,8 @@ class MyWindow(QtWidgets.QMainWindow):
                 newplot.num_samples = math.ceil(
                     newplot.Samplingfrequency * newplot.data["time"].max()
                 )
+                self.samplingFreqNum.setText(f"Value: {newplot.Samplingfrequency}")
+                self.Fmax.setText(f"Value: {(newplot.Samplingfrequency)/2}")
                 print("sampling frequency")
                 print(newplot.Samplingfrequency, newplot.Frequency)
                 (
@@ -368,6 +374,8 @@ class MyWindow(QtWidgets.QMainWindow):
             newplot.num_samples = math.ceil(
                 newplot.Samplingfrequency * newplot.signaltime.max()
             )
+            self.samplingFreqNum.setText(f"Value: {newplot.Samplingfrequency}")
+            self.Fmax.setText(f"Value: {(newplot.Samplingfrequency)/2}")
             print("sampling frequency")
             print(newplot.Samplingfrequency, newplot.Frequency)
             (
@@ -409,6 +417,8 @@ class MyWindow(QtWidgets.QMainWindow):
                 newplot.num_samples = math.ceil(
                 newplot.Samplingfrequency * newplot.signaltime.max()
                 )
+                self.samplingFreqNum.setText(f"Value: {newplot.Samplingfrequency}")
+                self.Fmax.setText(f"Value: {(newplot.Samplingfrequency)/2}")
                 print("sampling frequency")
                 print(newplot.Samplingfrequency, newplot.Frequency)
                 (
@@ -456,6 +466,37 @@ class MyWindow(QtWidgets.QMainWindow):
         self.ComposedSignal()
         #  self.updatefunction()
 
+    def EnterMagnitude(self):
+        # This will block until the user closes the dialog
+        newplot = self.GetChosenPlotLine()
+        if self.Magnitude.text(): 
+            user_input = int(self.Magnitude.text())
+            newplot.magnitude = int(user_input)
+            t = np.linspace(0, 10, 3000)
+            if newplot.signaltype == 1:
+                newplot.signal = (
+                    np.sin(2 * np.pi * newplot.Frequency * t)
+                ) * newplot.magnitude
+            elif newplot.signaltype == 2:
+                newplot.signal = (
+                    np.cos(2 * np.pi * newplot.Frequency * t)
+                ) * newplot.magnitude
+
+        self.ComposedSignal()
+
+    def EnterPhase(self):
+        newplot = self.GetChosenPlotLine()
+        if self.Phase.text():
+            user_input = int(self.Phase.text())
+            newplot.phase = (int(user_input))*(np.pi)
+            t = np.linspace(0, 10 , 3000)
+            if newplot.signaltype == 1:
+                newplot.signal = np.sin(2 * np.pi * newplot.Frequency * t + newplot.phase)
+            elif newplot.signaltype == 2:
+                newplot.signal = np.cos(2 * np.pi * newplot.Frequency * t + newplot.phase)
+
+        self.ComposedSignal()
+
     def remove(self):
         global PlotLines
         global SinCos
@@ -477,23 +518,6 @@ class MyWindow(QtWidgets.QMainWindow):
         self.Frequency.clear()
         self.Magnitude.clear()
 
-    def EnterMagnitude(self):
-        # This will block until the user closes the dialog
-        newplot = self.GetChosenPlotLine()
-        if self.Magnitude.text(): 
-            user_input = int(self.Magnitude.text())
-            newplot.magnitude = int(user_input)
-            t = np.linspace(0, 1, 1000)
-            if newplot.signaltype == 1:
-                newplot.signal = (
-                    np.sin(2 * np.pi * newplot.Frequency * t)
-                ) * newplot.magnitude
-            elif newplot.signaltype == 2:
-                newplot.signal = (
-                    np.cos(2 * np.pi * newplot.Frequency * t)
-                ) * newplot.magnitude
-
-        self.ComposedSignal()
 
     # def updatefunction(self):
     #     self.graphWidget1.clear()
