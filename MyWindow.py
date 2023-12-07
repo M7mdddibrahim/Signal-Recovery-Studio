@@ -488,7 +488,7 @@ class MyWindow(QtWidgets.QMainWindow):
         newplot = self.GetChosenPlotLine()
         if self.Phase.text():
             user_input = int(self.Phase.text())
-            newplot.phase = (int(user_input))*(np.pi)
+            newplot.phase = (int(user_input))*(np.pi/4)
             t = np.linspace(0, 10 , 3000)
             if newplot.signaltype == 1:
                 newplot.signal = np.sin(2 * np.pi * newplot.Frequency * t + newplot.phase)
