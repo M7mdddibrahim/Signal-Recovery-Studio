@@ -205,6 +205,8 @@ class MyWindow(QtWidgets.QMainWindow):
         for plot in SinCos:
             # newplot.signal = np.add(newplot.signal,plot.signal)
             newplot.signal += plot.signal
+            if plot.signaltype==2:
+                newplot.signaltype=2
             print(plot.Frequency)
             if plot.Frequency > fmax:
                 fmax = plot.Frequency
@@ -300,7 +302,7 @@ class MyWindow(QtWidgets.QMainWindow):
                 newplot.Samplingfrequency * newplot.data["time"].max()
             )
             self.samplingFreqNum.setText(f"Value: {newplot.Samplingfrequency}")
-            self.Fmax.setText(f"Value: {(newplot.Samplingfrequency)/2}")
+            self.Fmax.setText(f"Value: {newplot.Frequency}")
             print("sampling frequency")
             print(newplot.Samplingfrequency, newplot.Frequency)
             (
@@ -375,15 +377,22 @@ class MyWindow(QtWidgets.QMainWindow):
                 newplot.Samplingfrequency * newplot.signaltime.max()
             )
             self.samplingFreqNum.setText(f"Value: {newplot.Samplingfrequency}")
-            self.Fmax.setText(f"Value: {(newplot.Samplingfrequency)/2}")
+            self.Fmax.setText(f"Value: {(newplot.Frequency)}")
             print("sampling frequency")
             print(newplot.Samplingfrequency, newplot.Frequency)
-            (
-                newplot.sampledSignalAmplitude,
-                newplot.sampledSignalTime,
-            ) = scipy.signal.resample(
-                newplot.signal, int(newplot.num_samples), newplot.signaltime
-            )
+                                                             ############# newplot.signaltype==2 and newplot.Samplingfrequency==newplot.Frequency
+            # Specify time values for sampling
+            newplot.sampledSignalTime = np.linspace(0, 10,  newplot.num_samples, endpoint=False)   #######new sampling algorthim 
+
+            # Resample the signal at the specified time values
+            newplot.sampledSignalAmplitude = np.interp(newplot.sampledSignalTime, newplot.signaltime, newplot.signal)
+            # else:
+            #     (
+            #         newplot.sampledSignalAmplitude,
+            #         newplot.sampledSignalTime,
+            #     ) = scipy.signal.resample(
+            #         newplot.signal, int(newplot.num_samples), newplot.signaltime
+            #     )
             if self.SNR != None:        
                 noise = (
                     (
@@ -418,7 +427,7 @@ class MyWindow(QtWidgets.QMainWindow):
                 newplot.Samplingfrequency * newplot.signaltime.max()
                 )
                 self.samplingFreqNum.setText(f"Value: {newplot.Samplingfrequency}")
-                self.Fmax.setText(f"Value: {(newplot.Samplingfrequency)/2}")
+                self.Fmax.setText(f"Value: {(newplot.Frequency)}")
                 print("sampling frequency")
                 print(newplot.Samplingfrequency, newplot.Frequency)
                 (
@@ -487,13 +496,13 @@ class MyWindow(QtWidgets.QMainWindow):
     def EnterPhase(self):
         newplot = self.GetChosenPlotLine()
         if self.Phase.text():
-            user_input = int(self.Phase.text())
-            newplot.phase = (int(user_input))*(np.pi/4)
+            user_input = float(self.Phase.text())
+            newplot.phase = (float(user_input))*(np.pi)
             t = np.linspace(0, 10 , 3000)
             if newplot.signaltype == 1:
-                newplot.signal = np.sin(2 * np.pi * newplot.Frequency * t + newplot.phase)
+                newplot.signal = np.sin(2 * np.pi * newplot.Frequency * t + newplot.phase)*newplot.magnitude
             elif newplot.signaltype == 2:
-                newplot.signal = np.cos(2 * np.pi * newplot.Frequency * t + newplot.phase)
+                newplot.signal = np.cos(2 * np.pi * newplot.Frequency * t + newplot.phase)*newplot.magnitude
 
         self.ComposedSignal()
 
