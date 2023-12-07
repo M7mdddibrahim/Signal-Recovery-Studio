@@ -1,10 +1,11 @@
 class PlotLine:
     Samplingfrequency=0
     MaxFrequency=0
+    Frequency=0
     magnitude=0
+    phase = 0
     data=None
     signal = None
-    Frequency=0
     name = ""
     pen = None
     data_line = None

@@ -65,7 +65,7 @@ class InputDialog(QtWidgets.QDialog):
 class MyWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
-        self.ui = uic.loadUi("GUI-2.ui", self)
+        self.ui = uic.loadUi("GUI-3.ui", self)
         self.graphWidget1 = pg.PlotWidget()
         self.legend1 = self.graphWidget1.addLegend()
         self.graphWidget2 = pg.PlotWidget()
@@ -77,25 +77,31 @@ class MyWindow(QtWidgets.QMainWindow):
         self.CosButton.clicked.connect(self.AddCos)
         self.Frequency.textChanged.connect(self.EnterFrequency)
         self.Magnitude.textChanged.connect(self.EnterMagnitude)
+        self.Phase.textChanged.connect(self.EnterPhase)
         self.actionLoad.triggered.connect(self.Load)
         self.ClearGraph.clicked.connect(self.remove)
-        self.SamplingSlider = self.findChild(QSlider, "verticalSlider")
-        self.SamplingLabel = self.findChild(QLabel, "SamplingNumber")
+        self.SamplinginFmax = self.findChild(QSlider, "verticalSlider")
+        self.SamplingLabel = self.findChild(QLabel, "FMaxNum")
         self.NoiseSlider = self.findChild(QSlider, "verticalSlider_2")
-        self.NoiseLabel = self.findChild(QLabel, "NoiseNumber")
+        self.NoiseLabel = self.findChild(QLabel, "NoiseNum")
+        self.SamplinginHz = self.findChild(QSlider, "verticalSlider_3")
+        self.SamplingInHzLabel = self.findChild(QLabel, "HzNum")
+        self.samplingFreqNum = self.findChild(QLabel, "label_18")
+        self.Fmax = self.findChild(QLabel, "label_20")
         self.actionSampling.triggered.connect(self.SamplingTextfunc)
-        self.SamplingSlider.setMinimum(1)
-        self.SamplingSlider.setMaximum(30)
+        self.SamplinginFmax.setMinimum(1)
+        self.SamplinginFmax.setMaximum(30)
         self.NoiseSlider.setMinimum(0)
         self.NoiseSlider.setMaximum(50)
-        self.SamplingSlider.valueChanged.connect(self.SamplingSliderfunc)
+        self.SamplinginFmax.valueChanged.connect(self.samplingInFmaxFunc)
         self.NoiseSlider.valueChanged.connect(self.NoiseSliderfunc)
+        self.SamplinginHz.valueChanged.connect(self.samplingInHz)
         self.enteredsampledfreq = None
         self.comboBox.addItem("Choose Signal")
         self.SinCount = 0
         self.CosCount = 0
         self.SNR = None
-        self.isSliderOrText = 0
+        self.isFmax_Text_Hz = 0
 
     def ErrorMsg(self, text):
         msg = QMessageBox()
@@ -104,8 +110,9 @@ class MyWindow(QtWidgets.QMainWindow):
         msg.setIcon(QMessageBox.Warning)
         x = msg.exec_()
 
-    def SamplingSliderfunc(self, value):
-        self.isSliderOrText = 1
+    def samplingInFmaxFunc(self, value):
+        self.isFmax_Text_Hz = 1
+        self.SamplinginHz.setValue(1)
         self.SamplingLabel.setText(str(value))
         self.enteredsampledfreq = int(value)
         # self.updatefunction()
@@ -113,12 +120,12 @@ class MyWindow(QtWidgets.QMainWindow):
         return value
 
     def SamplingTextfunc(self, value):
-        self.isSliderOrText = 2
+        self.isFmax_Text_Hz = 2
         dialog = InputDialog(self)
         result = dialog.exec_()  # This will block until the user closes the dialog
         if result == QtWidgets.QDialog.Accepted:
             value = dialog.input_text.text()
-        self.SamplingLabel.setText(str(value))
+        # self.SamplingLabel.setText(str(value))
         self.enteredsampledfreq = int(value)
         self.sampling()
         return value
@@ -126,6 +133,17 @@ class MyWindow(QtWidgets.QMainWindow):
     def NoiseSliderfunc(self, value):
         self.NoiseLabel.setText(str(value))
         self.SNR = int(value)
+        # self.updatefunction()
+        self.sampling()
+
+    def samplingInHz(self, value):
+        self.isFmax_Text_Hz = 3
+        self.SamplinginFmax.setValue(1)
+        newplot = PlotLines[-1]
+        self.SamplinginHz.setMinimum(1)
+        self.SamplinginHz.setMaximum(6*(newplot.Frequency))
+        self.SamplingInHzLabel.setText(str(value))
+        self.enteredsampledfreq = int(value)
         # self.updatefunction()
         self.sampling()
 
@@ -261,10 +279,10 @@ class MyWindow(QtWidgets.QMainWindow):
     def sampling(self):
      if len(PlotLines)>0:
         newplot = PlotLines[-1]
-        if self.isSliderOrText == 0:
+        if self.isFmax_Text_Hz == 0:
             newplot.Samplingfrequency = (2 * newplot.Frequency) + 1
             newplot.SamplingInterval = 1 / newplot.Samplingfrequency
-        elif self.isSliderOrText == 1 and self.enteredsampledfreq != None :
+        elif self.isFmax_Text_Hz == 1 and self.enteredsampledfreq != None :
             if self.enteredsampledfreq==1:
                  newplot.Samplingfrequency = (
                 self.enteredsampledfreq * newplot.Frequency
@@ -274,14 +292,15 @@ class MyWindow(QtWidgets.QMainWindow):
                     self.enteredsampledfreq * newplot.Frequency
                 ) + 1
             newplot.SamplingInterval = 1 / newplot.Samplingfrequency
-        elif self.isSliderOrText == 2  and self.enteredsampledfreq != None :
+        elif (self.isFmax_Text_Hz == 2 or self.isFmax_Text_Hz == 3)  and self.enteredsampledfreq != None :
             newplot.Samplingfrequency = self.enteredsampledfreq
             newplot.SamplingInterval = 1 / newplot.Samplingfrequency
-
         if newplot.isloaded == 1:
             newplot.num_samples = math.ceil(
                 newplot.Samplingfrequency * newplot.data["time"].max()
             )
+            self.samplingFreqNum.setText(f"Value: {newplot.Samplingfrequency}")
+            self.Fmax.setText(f"Value: {(newplot.Samplingfrequency)/2}")
             print("sampling frequency")
             print(newplot.Samplingfrequency, newplot.Frequency)
             (
@@ -323,6 +342,8 @@ class MyWindow(QtWidgets.QMainWindow):
                 newplot.num_samples = math.ceil(
                     newplot.Samplingfrequency * newplot.data["time"].max()
                 )
+                self.samplingFreqNum.setText(f"Value: {newplot.Samplingfrequency}")
+                self.Fmax.setText(f"Value: {(newplot.Samplingfrequency)/2}")
                 print("sampling frequency")
                 print(newplot.Samplingfrequency, newplot.Frequency)
                 (
@@ -353,6 +374,8 @@ class MyWindow(QtWidgets.QMainWindow):
             newplot.num_samples = math.ceil(
                 newplot.Samplingfrequency * newplot.signaltime.max()
             )
+            self.samplingFreqNum.setText(f"Value: {newplot.Samplingfrequency}")
+            self.Fmax.setText(f"Value: {(newplot.Samplingfrequency)/2}")
             print("sampling frequency")
             print(newplot.Samplingfrequency, newplot.Frequency)
             (
@@ -361,7 +384,7 @@ class MyWindow(QtWidgets.QMainWindow):
             ) = scipy.signal.resample(
                 newplot.signal, int(newplot.num_samples), newplot.signaltime
             )
-            if self.SNR != None:
+            if self.SNR != None:        
                 noise = (
                     (
                         np.random.normal(
@@ -394,6 +417,8 @@ class MyWindow(QtWidgets.QMainWindow):
                 newplot.num_samples = math.ceil(
                 newplot.Samplingfrequency * newplot.signaltime.max()
                 )
+                self.samplingFreqNum.setText(f"Value: {newplot.Samplingfrequency}")
+                self.Fmax.setText(f"Value: {(newplot.Samplingfrequency)/2}")
                 print("sampling frequency")
                 print(newplot.Samplingfrequency, newplot.Frequency)
                 (
@@ -441,6 +466,37 @@ class MyWindow(QtWidgets.QMainWindow):
         self.ComposedSignal()
         #  self.updatefunction()
 
+    def EnterMagnitude(self):
+        # This will block until the user closes the dialog
+        newplot = self.GetChosenPlotLine()
+        if self.Magnitude.text(): 
+            user_input = int(self.Magnitude.text())
+            newplot.magnitude = int(user_input)
+            t = np.linspace(0, 10, 3000)
+            if newplot.signaltype == 1:
+                newplot.signal = (
+                    np.sin(2 * np.pi * newplot.Frequency * t)
+                ) * newplot.magnitude
+            elif newplot.signaltype == 2:
+                newplot.signal = (
+                    np.cos(2 * np.pi * newplot.Frequency * t)
+                ) * newplot.magnitude
+
+        self.ComposedSignal()
+
+    def EnterPhase(self):
+        newplot = self.GetChosenPlotLine()
+        if self.Phase.text():
+            user_input = int(self.Phase.text())
+            newplot.phase = (int(user_input))*(np.pi/4)
+            t = np.linspace(0, 10 , 3000)
+            if newplot.signaltype == 1:
+                newplot.signal = np.sin(2 * np.pi * newplot.Frequency * t + newplot.phase)
+            elif newplot.signaltype == 2:
+                newplot.signal = np.cos(2 * np.pi * newplot.Frequency * t + newplot.phase)
+
+        self.ComposedSignal()
+
     def remove(self):
         global PlotLines
         global SinCos
@@ -454,29 +510,14 @@ class MyWindow(QtWidgets.QMainWindow):
         PlotLines = []
         SinCos = []
         self.verticalSlider.setValue(1)
-        self.verticalSlider_2.setValue(1)
+        self.verticalSlider_2.setValue(0)
+        self.verticalSlider_3.setValue(1)
         self.SNR = None
+        self.SNR2 = None
         self.enteredsampledfreq = None
         self.Frequency.clear()
         self.Magnitude.clear()
 
-    def EnterMagnitude(self):
-        # This will block until the user closes the dialog
-        newplot = self.GetChosenPlotLine()
-        if self.Magnitude.text(): 
-            user_input = int(self.Magnitude.text())
-            newplot.magnitude = int(user_input)
-            t = np.linspace(0, 1, 1000)
-            if newplot.signaltype == 1:
-                newplot.signal = (
-                    np.sin(2 * np.pi * newplot.Frequency * t)
-                ) * newplot.magnitude
-            elif newplot.signaltype == 2:
-                newplot.signal = (
-                    np.cos(2 * np.pi * newplot.Frequency * t)
-                ) * newplot.magnitude
-
-        self.ComposedSignal()
 
     # def updatefunction(self):
     #     self.graphWidget1.clear()
