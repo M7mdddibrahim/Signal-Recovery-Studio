@@ -20,3 +20,7 @@ class PlotLine:
     errorGraph=None
     reconstructed_signal=[]
     isDat = 0
+    original_time=None
+    original_Amplitude=None
+    modified_time=None
+    modified_Amplitude=None

@@ -89,7 +89,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.samplingFreqNum = self.findChild(QLabel, "label_18")
         self.Fmax = self.findChild(QLabel, "label_20")
         self.actionSampling.triggered.connect(self.SamplingTextfunc)
-        self.SamplinginFmax.setMinimum(1)
+        self.SamplinginFmax.setMinimum(0)
         self.SamplinginFmax.setMaximum(30)
         self.NoiseSlider.setMinimum(0)
         self.NoiseSlider.setMaximum(50)
@@ -112,7 +112,6 @@ class MyWindow(QtWidgets.QMainWindow):
 
     def samplingInFmaxFunc(self, value):
         self.isFmax_Text_Hz = 1
-        self.SamplinginHz.setValue(1)
         self.SamplingLabel.setText(str(value))
         self.enteredsampledfreq = int(value)
         # self.updatefunction()
@@ -137,13 +136,9 @@ class MyWindow(QtWidgets.QMainWindow):
         self.sampling()
 
     def samplingInHz(self, value):
-        self.isFmax_Text_Hz = 3
-        self.SamplinginFmax.setValue(1)
+        self.isFmax_Text_Hz = 1
         newplot = PlotLines[-1]
-        self.SamplinginHz.setMinimum(1)
-        self.SamplinginHz.setMaximum(6*(newplot.Frequency))
         self.SamplingInHzLabel.setText(str(value))
-        self.enteredsampledfreq = int(value)
         # self.updatefunction()
         self.sampling()
 
@@ -205,13 +200,13 @@ class MyWindow(QtWidgets.QMainWindow):
         for plot in SinCos:
             # newplot.signal = np.add(newplot.signal,plot.signal)
             newplot.signal += plot.signal
-            if plot.signaltype==2:
-                newplot.signaltype=2
+            if plot.signaltype == 2:
+                newplot.signaltype = 2
             print(plot.Frequency)
             if plot.Frequency > fmax:
                 fmax = plot.Frequency
-        newplot.Frequency=fmax
-        #ampltude = np.ascontiguousarray(newplot.signal)
+        newplot.Frequency = fmax
+        # ampltude = np.ascontiguousarray(newplot.signal)
         # Check the data type of the data
         # if ampltude.dtype != np.float64:
         #     ampltude = ampltude.astype(np.float64)
@@ -262,7 +257,7 @@ class MyWindow(QtWidgets.QMainWindow):
 
             newplot.reconstructed_signal = reconstructed_signal
             self.graphWidget2.clear()
-            self.graphWidget2.plot(t, reconstructed_signal,pen='y')
+            self.graphWidget2.plot(t, reconstructed_signal, pen="y")
             self.ErrorGraph()
         else:
             num_samples = len(newplot.sampledSignalAmplitude)
@@ -275,77 +270,36 @@ class MyWindow(QtWidgets.QMainWindow):
                 )
             newplot.reconstructed_signal = reconstructed_signal
             self.graphWidget2.clear()
-            self.graphWidget2.plot(t, reconstructed_signal,pen='y')
+            self.graphWidget2.plot(t, reconstructed_signal, pen="y")
             self.ErrorGraph()
 
     def sampling(self):
-     if len(PlotLines)>0:
-        newplot = PlotLines[-1]
-        if self.isFmax_Text_Hz == 0:
-            newplot.Samplingfrequency = (2 * newplot.Frequency) + 1
-            newplot.SamplingInterval = 1 / newplot.Samplingfrequency
-        elif self.isFmax_Text_Hz == 1 and self.enteredsampledfreq != None :
-            if self.enteredsampledfreq==1:
-                 newplot.Samplingfrequency = (
-                self.enteredsampledfreq * newplot.Frequency
-            ) 
-            else:
-                newplot.Samplingfrequency = (
-                    self.enteredsampledfreq * newplot.Frequency
-                ) + 1
-            newplot.SamplingInterval = 1 / newplot.Samplingfrequency
-        elif (self.isFmax_Text_Hz == 2 or self.isFmax_Text_Hz == 3)  and self.enteredsampledfreq != None :
-            newplot.Samplingfrequency = self.enteredsampledfreq
-            newplot.SamplingInterval = 1 / newplot.Samplingfrequency
-        if newplot.isloaded == 1:
-            newplot.num_samples = math.ceil(
-                newplot.Samplingfrequency * newplot.data["time"].max()
-            )
-            self.samplingFreqNum.setText(f"Value: {newplot.Samplingfrequency}")
-            self.Fmax.setText(f"Value: {newplot.Frequency}")
-            print("sampling frequency")
-            print(newplot.Samplingfrequency, newplot.Frequency)
-            (
-                newplot.sampledSignalAmplitude,
-                newplot.sampledSignalTime,
-            ) = scipy.signal.resample(
-                newplot.data["amplitude"],
-                int(newplot.num_samples),
-                newplot.data["time"],
-            )
-            if self.SNR != None:
-                noise = np.random.normal(
-                    0, 10 ** (-self.SNR / 20), len(newplot.sampledSignalAmplitude)
-                )
-                if newplot.isDat == 1:
-                    newplot.sampledSignalAmplitude += noise*1000000
+        if len(PlotLines) > 0:
+            newplot = PlotLines[-1]
+            if self.isFmax_Text_Hz == 0:
+                newplot.Samplingfrequency = (2 * newplot.Frequency) + 1
+                newplot.SamplingInterval = 1 / newplot.Samplingfrequency
+            elif self.isFmax_Text_Hz == 1 and self.enteredsampledfreq != None:
+                if self.enteredsampledfreq == 1:
+                    newplot.Samplingfrequency = (
+                        self.enteredsampledfreq * newplot.Frequency
+                    ) + self.SamplinginHz.value()
                 else:
-                    newplot.sampledSignalAmplitude += noise
-            print("lookat")
-            print(len(newplot.sampledSignalAmplitude), len(newplot.sampledSignalTime))
-            self.graphWidget1.clear()
-            newplot.data_line = self.graphWidget1.plot(
-                newplot.data["time"],
-                newplot.data["amplitude"],
-                pen=newplot.pen,
-                name=newplot.name,
-            )
-            scatterPlotItem = pg.ScatterPlotItem(
-                newplot.sampledSignalTime,
-                newplot.sampledSignalAmplitude,
-                size=10,
-                pen=None,
-                symbol="o",
-            )
-            self.graphWidget1.addItem(scatterPlotItem)
-            self.Reconstruction()
-            pass
-            if self.SNR == int(0):
+                    newplot.Samplingfrequency = (
+                        self.enteredsampledfreq * newplot.Frequency
+                    ) + self.SamplinginHz.value()
+                newplot.SamplingInterval = 1 / newplot.Samplingfrequency
+            elif (
+                self.isFmax_Text_Hz == 2 or self.isFmax_Text_Hz == 3
+            ) and self.enteredsampledfreq != None:
+                newplot.Samplingfrequency = self.enteredsampledfreq
+                newplot.SamplingInterval = 1 / newplot.Samplingfrequency
+            if newplot.isloaded == 1 and self.SNR==None:
                 newplot.num_samples = math.ceil(
                     newplot.Samplingfrequency * newplot.data["time"].max()
                 )
                 self.samplingFreqNum.setText(f"Value: {newplot.Samplingfrequency}")
-                self.Fmax.setText(f"Value: {(newplot.Samplingfrequency)/2}")
+                self.Fmax.setText(f"Value: {newplot.Frequency}")
                 print("sampling frequency")
                 print(newplot.Samplingfrequency, newplot.Frequency)
                 (
@@ -356,110 +310,247 @@ class MyWindow(QtWidgets.QMainWindow):
                     int(newplot.num_samples),
                     newplot.data["time"],
                 )
-            self.graphWidget1.clear()
-            newplot.data_line = self.graphWidget1.plot(
-                newplot.data["time"],
-                newplot.data["amplitude"],
-                pen=newplot.pen,
-                name=newplot.name,
-            )
-            scatterPlotItem = pg.ScatterPlotItem(
-                newplot.sampledSignalTime,
-                newplot.sampledSignalAmplitude,
-                size=10,
-                pen=None,
-                symbol="o",
-            )
-            self.graphWidget1.addItem(scatterPlotItem)
-            self.Reconstruction()
-        elif newplot.isloaded != 1:
-            newplot.num_samples = math.ceil(
-                newplot.Samplingfrequency * newplot.signaltime.max()
-            )
-            self.samplingFreqNum.setText(f"Value: {newplot.Samplingfrequency}")
-            self.Fmax.setText(f"Value: {(newplot.Frequency)}")
-            print("sampling frequency")
-            print(newplot.Samplingfrequency, newplot.Frequency)
-                                                             ############# newplot.signaltype==2 and newplot.Samplingfrequency==newplot.Frequency
-            # Specify time values for sampling
-            newplot.sampledSignalTime = np.linspace(0, 10,  newplot.num_samples, endpoint=False)   #######new sampling algorthim 
-
-            # Resample the signal at the specified time values
-            newplot.sampledSignalAmplitude = np.interp(newplot.sampledSignalTime, newplot.signaltime, newplot.signal)
-            # else:
-            #     (
-            #         newplot.sampledSignalAmplitude,
-            #         newplot.sampledSignalTime,
-            #     ) = scipy.signal.resample(
-            #         newplot.signal, int(newplot.num_samples), newplot.signaltime
-            #     )
-            if self.SNR != None:        
-                noise = (
-                    (
-                        np.random.normal(
-                            0,
-                            10 ** (-self.SNR / 20),
-                            len(newplot.sampledSignalTime),
-                        )
-                    )
-                    * newplot.magnitude
-                    * 10
+                self.graphWidget1.clear()
+                newplot.data_line = self.graphWidget1.plot(
+                    newplot.data["time"],
+                     newplot.data["amplitude"],
+                    pen=newplot.pen,
+                    name=newplot.name,
                 )
-                newplot.sampledSignalAmplitude += noise
-            self.graphWidget1.clear()
-            newplot.data_line = self.graphWidget1.plot(
-                newplot.signaltime, newplot.signal, pen=newplot.pen, name=newplot.name
-            )
-            scatterPlotItem = pg.ScatterPlotItem(
-                newplot.sampledSignalTime,
-                newplot.sampledSignalAmplitude,
-                size=10,
-                pen=None,
-                symbol="o",
-            )
-            self.graphWidget1.addItem(scatterPlotItem)
-            # self.graphWidget2.plot(
-            #     newplot.sampledSignalTime, newplot.sampledSignalAmplitude, symbol="+"
-            # )
-            self.Reconstruction()
+                scatterPlotItem = pg.ScatterPlotItem(
+                        newplot.sampledSignalTime,
+                        newplot.sampledSignalAmplitude,
+                        size=10,
+                        pen=None,
+                        symbol="o",
+                    )
+                self.graphWidget1.addItem(scatterPlotItem)
+                self.Reconstruction()
+                pass
+            if newplot.isloaded == 1 and self.SNR != None and self.SNR != 0:
+                    noise1 = np.random.normal(
+                        0, 10 ** (-self.SNR / 20), len(newplot.data['amplitude'])
+                    )
+                    noise=noise1.astype(np.int32)
+                    if newplot.isDat == 1:
+                        newplot.modified_Amplitude += noise * 1000000
+                        (
+                            newplot.sampledSignalAmplitude,
+                            newplot.sampledSignalTime,
+                        ) = scipy.signal.resample(
+                            newplot.modified_Amplitude,
+                            int(newplot.num_samples),
+                            newplot.modified_time,)
+                        self.graphWidget1.clear()
+                        newplot.data_line = self.graphWidget1.plot(
+                            newplot.modified_time,
+                            newplot.modified_Amplitude,
+                            pen=newplot.pen,
+                            name=newplot.name,
+                        )
+                        scatterPlotItem = pg.ScatterPlotItem(
+                            newplot.sampledSignalTime,
+                            newplot.sampledSignalAmplitude,
+                            size=10,
+                            pen=None,
+                            symbol="o",
+                        )
+                        self.graphWidget1.addItem(scatterPlotItem)
+                        print("lookat")
+                        print(
+                            len(newplot.sampledSignalAmplitude), len(newplot.sampledSignalTime)
+                        )
+                        self.Reconstruction()
+                        pass
+                        
+                    else:
+                        newplot.data['amplitude'] += noise
+                        (
+                            newplot.sampledSignalAmplitude,
+                            newplot.sampledSignalTime,
+                        ) = scipy.signal.resample(
+                            newplot.data["amplitude"],
+                            int(newplot.num_samples),
+                            newplot.data["time"],
+                        )
+                        self.graphWidget1.clear()
+                        newplot.data_line = self.graphWidget1.plot(
+                            newplot.data["time"],
+                            newplot.data["amplitude"],
+                            pen=newplot.pen,
+                            name=newplot.name,
+                        )
+                        scatterPlotItem = pg.ScatterPlotItem(
+                            newplot.sampledSignalTime,
+                            newplot.sampledSignalAmplitude,
+                            size=10,
+                            pen=None,
+                            symbol="o",
+                        )
+                        self.graphWidget1.addItem(scatterPlotItem)
+                        print("lookat")
+                        print(
+                            len(newplot.sampledSignalAmplitude), len(newplot.sampledSignalTime)
+                        )
+                        self.Reconstruction()
+                        pass
+                        
+         
             if self.SNR == int(0):
+                    newplot.num_samples = math.ceil(
+                        newplot.Samplingfrequency * newplot.data["time"].max()
+                    )
+                    self.samplingFreqNum.setText(f"Value: {newplot.Samplingfrequency}")
+                    self.Fmax.setText(f"Value: {(newplot.Samplingfrequency)/2}")
+                    print("sampling frequency")
+                    print(newplot.Samplingfrequency, newplot.Frequency)
+                    if newplot.isDat==1:
+                        (
+                            newplot.sampledSignalAmplitude,
+                            newplot.sampledSignalTime,
+                        ) = scipy.signal.resample(
+                            newplot.data["amplitude"],
+                            int(newplot.num_samples),
+                            newplot.data["time"],
+                         )
+                        self.graphWidget1.clear()
+                        newplot.data_line = self.graphWidget1.plot(
+                            newplot.data["time"],
+                            newplot.data["amplitude"],
+                            pen=newplot.pen,
+                            name=newplot.name,
+                        )
+                        scatterPlotItem = pg.ScatterPlotItem(
+                            newplot.sampledSignalTime,
+                            newplot.sampledSignalAmplitude,
+                            size=10,
+                            pen=None,
+                            symbol="o",
+                        )
+                        self.graphWidget1.addItem(scatterPlotItem)
+                        self.Reconstruction()
+                    else:
+                        (
+                            newplot.sampledSignalAmplitude,
+                            newplot.sampledSignalTime,
+                        ) = scipy.signal.resample(
+                            newplot.original_Amplitude,
+                            int(newplot.num_samples),
+                            newplot.original_time,
+                        )
+                        self.graphWidget1.clear()
+                        newplot.data_line = self.graphWidget1.plot(
+                            newplot.original_time,
+                            newplot.original_Amplitude,
+                            pen=newplot.pen,
+                            name=newplot.name,
+                        )
+                        scatterPlotItem = pg.ScatterPlotItem(
+                            newplot.sampledSignalTime,
+                            newplot.sampledSignalAmplitude,
+                            size=10,
+                            pen=None,
+                            symbol="o",
+                        )
+                        self.graphWidget1.addItem(scatterPlotItem)
+                        self.Reconstruction()
+            elif newplot.isloaded != 1:
                 newplot.num_samples = math.ceil(
-                newplot.Samplingfrequency * newplot.signaltime.max()
+                    newplot.Samplingfrequency * newplot.signaltime.max()
                 )
                 self.samplingFreqNum.setText(f"Value: {newplot.Samplingfrequency}")
                 self.Fmax.setText(f"Value: {(newplot.Frequency)}")
                 print("sampling frequency")
                 print(newplot.Samplingfrequency, newplot.Frequency)
-                (
-                    newplot.sampledSignalAmplitude,
-                    newplot.sampledSignalTime,
-                ) = scipy.signal.resample(
-                    newplot.signal, int(newplot.num_samples), newplot.signaltime
+                ############# newplot.signaltype==2 and newplot.Samplingfrequency==newplot.Frequency
+                # Specify time values for sampling
+                newplot.sampledSignalTime = np.linspace(
+                    0, 10, newplot.num_samples, endpoint=False
+                )  #######new sampling algorthim
+
+                # Resample the signal at the specified time values
+                newplot.sampledSignalAmplitude = np.interp(
+                    newplot.sampledSignalTime, newplot.signaltime, newplot.signal
                 )
-            self.graphWidget1.clear()
-            newplot.data_line = self.graphWidget1.plot(
-                newplot.signaltime, newplot.signal, pen=newplot.pen, name=newplot.name
-            )
-            scatterPlotItem = pg.ScatterPlotItem(
-                newplot.sampledSignalTime,
-                newplot.sampledSignalAmplitude,
-                size=10,
-                pen=None,
-                symbol="o",
-            )
-            self.graphWidget1.addItem(scatterPlotItem)
-            # self.graphWidget2.plot(
-            #     newplot.sampledSignalTime, newplot.sampledSignalAmplitude, symbol="+"
-            # )
-            self.Reconstruction()
-        
+                # else:
+                #     (
+                #         newplot.sampledSignalAmplitude,
+                #         newplot.sampledSignalTime,
+                #     ) = scipy.signal.resample(
+                #         newplot.signal, int(newplot.num_samples), newplot.signaltime
+                #     )
+                if self.SNR != None:
+                    noise = (
+                        (
+                            np.random.normal(
+                                0,
+                                10 ** (-self.SNR / 20),
+                                len(newplot.sampledSignalTime),
+                            )
+                        )
+                        * newplot.magnitude
+                        * 10
+                    )
+                    newplot.sampledSignalAmplitude += noise
+                self.graphWidget1.clear()
+                newplot.data_line = self.graphWidget1.plot(
+                    newplot.signaltime,
+                    newplot.signal,
+                    pen=newplot.pen,
+                    name=newplot.name,
+                )
+                scatterPlotItem = pg.ScatterPlotItem(
+                    newplot.sampledSignalTime,
+                    newplot.sampledSignalAmplitude,
+                    size=10,
+                    pen=None,
+                    symbol="o",
+                )
+                self.graphWidget1.addItem(scatterPlotItem)
+                # self.graphWidget2.plot(
+                #     newplot.sampledSignalTime, newplot.sampledSignalAmplitude, symbol="+"
+                # )
+                self.Reconstruction()
+                if self.SNR == int(0):
+                    newplot.num_samples = math.ceil(
+                        newplot.Samplingfrequency * newplot.signaltime.max()
+                    )
+                    self.samplingFreqNum.setText(f"Value: {newplot.Samplingfrequency}")
+                    self.Fmax.setText(f"Value: {(newplot.Frequency)}")
+                    print("sampling frequency")
+                    print(newplot.Samplingfrequency, newplot.Frequency)
+                    (
+                        newplot.sampledSignalAmplitude,
+                        newplot.sampledSignalTime,
+                    ) = scipy.signal.resample(
+                        newplot.signal, int(newplot.num_samples), newplot.signaltime
+                    )
+                self.graphWidget1.clear()
+                newplot.data_line = self.graphWidget1.plot(
+                    newplot.signaltime,
+                    newplot.signal,
+                    pen=newplot.pen,
+                    name=newplot.name,
+                )
+                scatterPlotItem = pg.ScatterPlotItem(
+                    newplot.sampledSignalTime,
+                    newplot.sampledSignalAmplitude,
+                    size=10,
+                    pen=None,
+                    symbol="o",
+                )
+                self.graphWidget1.addItem(scatterPlotItem)
+                # self.graphWidget2.plot(
+                #     newplot.sampledSignalTime, newplot.sampledSignalAmplitude, symbol="+"
+                # )
+                self.Reconstruction()
 
     def EnterFrequency(self):
         # dialog = InputDialog(self)
         # result = dialog.exec_()  # This will block until the user closes the dialog
         newplot = self.GetChosenPlotLine()
         # if result == QtWidgets.QDialog.Accepted:
-        if self.Frequency.text() :
+        if self.Frequency.text():
             user_input = int(self.Frequency.text())
             newplot.Frequency = int(user_input)
             t = np.linspace(0, 10, 3000)
@@ -478,7 +569,7 @@ class MyWindow(QtWidgets.QMainWindow):
     def EnterMagnitude(self):
         # This will block until the user closes the dialog
         newplot = self.GetChosenPlotLine()
-        if self.Magnitude.text(): 
+        if self.Magnitude.text():
             user_input = int(self.Magnitude.text())
             newplot.magnitude = int(user_input)
             t = np.linspace(0, 10, 3000)
@@ -497,12 +588,18 @@ class MyWindow(QtWidgets.QMainWindow):
         newplot = self.GetChosenPlotLine()
         if self.Phase.text():
             user_input = float(self.Phase.text())
-            newplot.phase = (float(user_input))*(np.pi)
-            t = np.linspace(0, 10 , 3000)
+            newplot.phase = (float(user_input)) * (np.pi)
+            t = np.linspace(0, 10, 3000)
             if newplot.signaltype == 1:
-                newplot.signal = np.sin(2 * np.pi * newplot.Frequency * t + newplot.phase)*newplot.magnitude
+                newplot.signal = (
+                    np.sin(2 * np.pi * newplot.Frequency * t + newplot.phase)
+                    * newplot.magnitude
+                )
             elif newplot.signaltype == 2:
-                newplot.signal = np.cos(2 * np.pi * newplot.Frequency * t + newplot.phase)*newplot.magnitude
+                newplot.signal = (
+                    np.cos(2 * np.pi * newplot.Frequency * t + newplot.phase)
+                    * newplot.magnitude
+                )
 
         self.ComposedSignal()
 
@@ -527,7 +624,6 @@ class MyWindow(QtWidgets.QMainWindow):
         self.Frequency.clear()
         self.Magnitude.clear()
 
-
     # def updatefunction(self):
     #     self.graphWidget1.clear()
     #     newplot = PlotLines[-1]
@@ -545,133 +641,150 @@ class MyWindow(QtWidgets.QMainWindow):
     #     self.sampling()
     #     self.Reconstruction()
 
-    
     def Load(self):
         filename = QtWidgets.QFileDialog.getOpenFileName()
         path = filename[0]
 
         if path.endswith(".txt"):
-                with open(path, "r") as data:
-                    x = []
-                    y = []
-                    for line in data:
-                        p = line.split()
-                        x.append(float(p[0]))
-                        y.append(float(p[1]))
-                newplot = PlotLine()
-                newplot.data = pd.DataFrame({"time": x, "amplitude": y})
-                newplot.pen = pg.mkPen(color=self.random_color())
-                newplot.name = "Signal 1"
-                newplot.data_line = self.graphWidget1.plot(
-                    newplot.data["time"],
-                    newplot.data["amplitude"],
-                    pen=newplot.pen,
-                    name=newplot.name,
-                )
-                PlotLines.append(newplot)
-                newplot.isloaded = 1
+            with open(path, "r") as data:
+                x = []
+                y = []
+                for line in data:
+                    p = line.split()
+                    x.append(float(p[0]))
+                    y.append(float(p[1]))
+            newplot = PlotLine()
+            newplot.data = pd.DataFrame({"time": x, "amplitude": y})
+            newplot.pen = pg.mkPen(color=self.random_color())
+            newplot.name = "Signal 1"
+            newplot.data_line = self.graphWidget1.plot(
+                newplot.data["time"],
+                newplot.data["amplitude"],
+                pen=newplot.pen,
+                name=newplot.name,
+            )
+            PlotLines.append(newplot)
+            newplot.isloaded = 1
 
-                ampltude = np.ascontiguousarray(newplot.data["amplitude"])
+            ampltude = np.ascontiguousarray(newplot.data["amplitude"])
 
-                # Check the data type of the data
-                if ampltude.dtype != np.float64:
-                    ampltude = ampltude.astype(np.float64)
-                magnitudes = np.abs(scipy.fft.rfft(ampltude)) / np.max(
-                    np.abs(scipy.fft.rfft(ampltude))
-                )
-                frequencies = scipy.fft.rfftfreq(
-                    len(newplot.data["time"]),
-                    (newplot.data["time"][1] - newplot.data["time"][0]),
-                )
-                for index, frequency in enumerate(frequencies):
-                    if magnitudes[index] >= 0.05:
-                        maximumFrequency = frequency
+            # Check the data type of the data
+            if ampltude.dtype != np.float64:
+                ampltude = ampltude.astype(np.float64)
+            magnitudes = np.abs(scipy.fft.rfft(ampltude)) / np.max(
+                np.abs(scipy.fft.rfft(ampltude))
+            )
+            frequencies = scipy.fft.rfftfreq(
+                len(newplot.data["time"]),
+                (newplot.data["time"][1] - newplot.data["time"][0]),
+            )
+            for index, frequency in enumerate(frequencies):
+                if magnitudes[index] >= 0.05:
+                    maximumFrequency = frequency
 
-                newplot.Frequency = math.ceil(maximumFrequency)
-                self.sampling()
+            newplot.Frequency = math.ceil(maximumFrequency)
+            self.SamplinginHz.setMinimum(1)
+            self.SamplinginHz.setMaximum(int(newplot.Frequency) - 1)
+            self.SamplinginFmax.setValue(2)
+            self.sampling()
 
         elif path.endswith(".csv"):
-                newplot = PlotLine()
-                newplot.data = pd.read_csv(path, usecols=["time", "amplitude"])
-                newplot.name = "Signal 1"
-                newplot.pen = pg.mkPen(color=self.random_color())
-                newplot.data_line = self.graphWidget1.plot(
-                    newplot.data["time"],
-                    newplot.data["amplitude"],
-                    pen=newplot.pen,
-                    name=newplot.name,
-                )
-                newplot.isloaded = 1
-                PlotLines.append(newplot)
+            newplot = PlotLine()
+            newplot.data = pd.read_csv(path, usecols=["time", "amplitude"])
+            newplot.name = "Signal 1"
+            newplot.pen = pg.mkPen(color=self.random_color())
+            newplot.data_line = self.graphWidget1.plot(
+                newplot.data["time"],
+                newplot.data["amplitude"],
+                pen=newplot.pen,
+                name=newplot.name,
+            )
+            newplot.isloaded = 1
+            PlotLines.append(newplot)
 
-                ampltude = np.ascontiguousarray(newplot.data["amplitude"])
+            ampltude = np.ascontiguousarray(newplot.data["amplitude"])
 
-                # Check the data type of the data
-                if ampltude.dtype != np.float64:
-                    ampltude = ampltude.astype(np.float64)
-                magnitudes = np.abs(scipy.fft.rfft(ampltude)) / np.max(
-                    np.abs(scipy.fft.rfft(ampltude))
-                )
-                frequencies = scipy.fft.rfftfreq(
-                    len(newplot.data["time"]),
-                    (newplot.data["time"][1] - newplot.data["time"][0]),
-                )
-                for index, frequency in enumerate(frequencies):
-                    if magnitudes[index] >= 0.05:
-                        maximumFrequency = frequency
+            # Check the data type of the data
+            if ampltude.dtype != np.float64:
+                ampltude = ampltude.astype(np.float64)
+            magnitudes = np.abs(scipy.fft.rfft(ampltude)) / np.max(
+                np.abs(scipy.fft.rfft(ampltude))
+            )
+            frequencies = scipy.fft.rfftfreq(
+                len(newplot.data["time"]),
+                (newplot.data["time"][1] - newplot.data["time"][0]),
+            )
+            for index, frequency in enumerate(frequencies):
+                if magnitudes[index] >= 0.05:
+                    maximumFrequency = frequency
 
-                newplot.Frequency = math.ceil(maximumFrequency)
-                print("max freq", newplot.Frequency)
-                self.sampling()
+            newplot.Frequency = math.ceil(maximumFrequency)
+            print("max freq", newplot.Frequency)
+            self.SamplinginHz.setMinimum(1)
+            self.SamplinginHz.setMaximum(int(newplot.Frequency) - 1)
+            self.SamplinginFmax.setValue(2)
+            newplot.original_Amplitude=newplot.data["amplitude"]
+            newplot.original_time=newplot.data["time"]
+            self.sampling()
 
         elif path.endswith(".dat"):
-                string2 = ".dat"
-                newpath = path.replace(string2, ".hea")
-                with open(newpath, 'rb') as file:
-                    # Read the first line which contains the data
-                    first_line = file.readline().strip()
+            string2 = ".dat"
+            newpath = path.replace(string2, ".hea")
+            with open(newpath, "rb") as file:
+                # Read the first line which contains the data
+                first_line = file.readline().strip()
 
-                    # Split the line by spaces to get columns
-                    columns = first_line.split()
+                # Split the line by spaces to get columns
+                columns = first_line.split()
 
-                    # Extract the integer from the second column
-                    fs = int(columns[2])
-                    print(fs)
-                with open(path, 'rb') as file:
-                    # Read binary data
-                    binary_data = file.read()
-                    
-                    # Convert binary data to a 1D array of integers
-                    values = np.frombuffer(binary_data, dtype=np.int32)
-                    
-                #fs is already known in medical signals
-                    # fs = 500.0  # Sample rate in Hz
-                    newplot = PlotLine()
-                    newplot.isDat = 1
-                    PlotLines.append(newplot)
-                    # Calculate time values
-                    time_values = np.arange(0, len(values) / fs, 1 / fs)
-                    newplot.Samplingfrequency=fs
-                    newplot.time=time_values
-                    newplot.amplitude=values
-                    data = {}
-                    data['time'] = time_values[0:2000]
-                    data['amplitude'] = values[0:2000]
-                    newplot.data=data
-                    newplot.isloaded=1
-                    newplot.Frequency=newplot.Samplingfrequency/2
-                    self.sampling()
+                # Extract the integer from the second column
+                fs = int(columns[2])
+                print(fs)
+            with open(path, "rb") as file:
+                # Read binary data
+                binary_data = file.read()
 
-        
+                # Convert binary data to a 1D array of integers
+                values = np.frombuffer(binary_data, dtype=np.int32)
+
+                # fs is already known in medical signals
+                # fs = 500.0  # Sample rate in Hz
+                newplot = PlotLine()
+                newplot.isDat = 1
+                PlotLines.append(newplot)
+                # Calculate time values
+                time_values = np.arange(0, len(values) / fs, 1 / fs)
+                newplot.Samplingfrequency = fs
+                newplot.time = time_values
+                newplot.amplitude = values
+                data = {}
+                data["time"] = time_values[0:2000]
+                data["amplitude"] = values[0:2000]
+                newplot.data = data
+                newplot.modified_time=data['time'].copy()
+                newplot.modified_Amplitude=data['amplitude'].copy()
+                newplot.isloaded = 1
+                newplot.Frequency = newplot.Samplingfrequency / 2
+                self.SamplinginHz.setMinimum(1)
+                self.SamplinginHz.setMaximum(int(newplot.Frequency) - 1)
+                self.SamplinginFmax.setValue(2)
+                newplot.pen = pg.mkPen(color=self.random_color())
+                newplot.data_line = self.graphWidget1.plot(
+                newplot.data["time"],
+                newplot.data["amplitude"],
+                pen=newplot.pen,
+                name=newplot.name,
+            )
+                self.sampling()
 
     def ErrorGraph(self):
         newplot = PlotLines[-1]
         self.graphWidget3.clear()
         if newplot.isloaded == 1:
             newplot.errorGraph = (
-                newplot.data["amplitude"]- newplot.reconstructed_signal 
+                newplot.data["amplitude"] - newplot.reconstructed_signal
             )
             self.graphWidget3.plot(newplot.data["time"], newplot.errorGraph)
         else:
-            newplot.errorGraph = newplot.signal-newplot.reconstructed_signal 
+            newplot.errorGraph = newplot.signal - newplot.reconstructed_signal
             self.graphWidget3.plot(newplot.signaltime, newplot.errorGraph)
