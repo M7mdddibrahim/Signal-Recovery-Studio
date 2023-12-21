@@ -515,7 +515,7 @@ background-color: rgb(190, 190, 190);</string>
      <x>0</x>
      <y>0</y>
      <width>1250</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuLoad_Signal">
@@ -530,8 +530,15 @@ background-color: rgb(190, 190, 190);</string>
     </property>
     <addaction name="actionSampling"/>
    </widget>
+   <widget class="QMenu" name="menuExtract_Signal">
+    <property name="title">
+     <string>Extract</string>
+    </property>
+    <addaction name="actionExtract_Signal"/>
+   </widget>
    <addaction name="menuLoad_Signal"/>
    <addaction name="menuWave"/>
+   <addaction name="menuExtract_Signal"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionLoad">
@@ -545,6 +552,11 @@ background-color: rgb(190, 190, 190);</string>
   <action name="actionSampling">
    <property name="text">
     <string>Sampling Frequency </string>
+   </property>
+  </action>
+  <action name="actionExtract_Signal">
+   <property name="text">
+    <string>Extract Signal</string>
    </property>
   </action>
  </widget>

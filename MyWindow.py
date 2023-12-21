@@ -17,6 +17,7 @@ import pyqtgraph as pg
 import pandas as pd
 import sys
 import os
+import csv
 import time
 from PIL import Image
 import tkinter as tk
@@ -79,6 +80,7 @@ class MyWindow(QtWidgets.QMainWindow):
         self.Magnitude.textChanged.connect(self.EnterMagnitude)
         self.Phase.textChanged.connect(self.EnterPhase)
         self.actionLoad.triggered.connect(self.Load)
+        self.actionExtract_Signal.triggered.connect(self.extractSignal)
         self.ClearGraph.clicked.connect(self.remove)
         self.SamplinginFmax = self.findChild(QSlider, "verticalSlider")
         self.SamplingLabel = self.findChild(QLabel, "FMaxNum")
@@ -794,8 +796,8 @@ class MyWindow(QtWidgets.QMainWindow):
                 newplot.time = time_values
                 newplot.amplitude = values
                 data = {}
-                data["time"] = time_values[0:2000]
-                data["amplitude"] = values[0:2000]
+                data["time"] = time_values
+                data["amplitude"] = values
                 newplot.data = data
                 newplot.modified_time = data["time"].copy()
                 newplot.modified_Amplitude = data["amplitude"].copy()
@@ -824,3 +826,22 @@ class MyWindow(QtWidgets.QMainWindow):
         else:
             newplot.errorGraph = newplot.signal - newplot.reconstructed_signal
             self.graphWidget3.plot(newplot.signaltime, newplot.errorGraph)
+    def extractSignal(self):
+        ExtractedSignal=PlotLines[-1]
+        # Zip the two arrays together
+        data = zip(ExtractedSignal.signaltime, ExtractedSignal.signal)
+
+        # Specify the CSV file path
+        csv_file_path = 'output_data.csv'
+
+        # Open the file in write mode
+        with open(csv_file_path, 'w', newline='') as csv_file:
+            # Create a CSV writer
+            csv_writer = csv.writer(csv_file)
+
+            # Write the header (if needed)
+            csv_writer.writerow(['Time', 'Amplitude'])
+
+            # Write the data
+            csv_writer.writerows(data)
+        
