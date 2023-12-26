@@ -7,7 +7,7 @@ Description: Develop a desktop application that illustrates the signal sampling 
 validation of the Nyquist rate. You application should have the following features:
 - Sample & Recover: Allow the user to load a mid-length signal (around 1000 points length), visualize and sample
 it via different frequencies, then use the sampled points to recover the original signal using Whittaker–Shannon
-interpolation formula (please, refer to this wiki page for more information). Sampling frequency should be
+interpolation formula (please, refer to this wiki page for more information: https://en.wikipedia.org/wiki/Nyquist%E2%80%93Shannon_sampling_theorem ). Sampling frequency should be
 shown in either actual frequency or normalized one (with respect to the maximum frequency, i.e. ranges from
 0×fmax to 4×fmax for example). You should use three graphs, one for displaying the original signal along with the
 markers for the sampled points and another one to display the reconstructed signal, and lastly the third one
